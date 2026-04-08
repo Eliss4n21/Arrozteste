@@ -16,11 +16,29 @@ if (process.env.NODE_ENV !== 'production') {
 const ADMIN_HASH = '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
 
 const DEFAULT = {
-  usuarios: [{
-    id: 1, nome: 'Fábio Toledo', email: 'fabio@arrozmarket.com.br',
-    senha: ADMIN_HASH, role: 'admin', avatar: 'FT',
-    criadoEm: '2025-01-01T00:00:00Z', ativo: true
-  }],
+  usuarios: [
+    /* ─────────────────────────────────────────────────────────────
+       ADMIN PADRÃO — acesse com:
+         E-mail : admin@arrozmarket.com.br
+         Senha  : admin123
+       Troque a senha após o primeiro login em Configurações.
+    ───────────────────────────────────────────────────────────── */
+    {
+      id: 1, nome: 'Administrador', email: 'admin@arrozmarket.com.br',
+      senha: ADMIN_HASH, role: 'admin', avatar: 'AD',
+      criadoEm: '2025-01-01T00:00:00Z', ativo: true
+    },
+    /* ─────────────────────────────────────────────────────────────
+       USUÁRIO DEMO — acesse com:
+         E-mail : fabio@arrozmarket.com.br
+         Senha  : admin123
+    ───────────────────────────────────────────────────────────── */
+    {
+      id: 2, nome: 'Fábio Toledo', email: 'fabio@arrozmarket.com.br',
+      senha: ADMIN_HASH, role: 'admin', avatar: 'FT',
+      criadoEm: '2025-01-01T00:00:00Z', ativo: true
+    },
+  ],
   videos: [
     { id:1, titulo:'Safra 2025 e Impactos nos Preços',         data:'07/04/2025', dur:'12:48', url:'', cat:'Análise Diária', status:'pub', views:3400, likes:1247 },
     { id:2, titulo:'Impacto do clima na safra do RS',           data:'03/04/2025', dur:'09:32', url:'', cat:'Análise Diária', status:'pub', views:2100, likes:87   },

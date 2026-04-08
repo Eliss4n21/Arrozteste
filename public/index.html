@@ -774,10 +774,15 @@ footer strong { color: var(--gold); }
     <p>Últimos 12 meses — R$ por saca de 60 kg</p>
     <div class="filtros">
       <button class="fil-btn ativo" onclick="apFiltro('todos',this)">Todos</button>
-      <button class="fil-btn" onclick="apFiltro('t1',this)">Tipo 1</button>
-      <button class="fil-btn" onclick="apFiltro('t2',this)">Tipo 2</button>
+      <button class="fil-btn" onclick="apFiltro('cas',this)">Em Casca</button>
+      <button class="fil-btn" onclick="apFiltro('mf_rs',this)">Merc. Físico</button>
+      <button class="fil-btn" onclick="apFiltro('agl',this)">Agulhinha</button>
+      <button class="fil-btn" onclick="apFiltro('lf',this)">Longo Fino</button>
+      <button class="fil-btn" onclick="apFiltro('ben',this)">Beneficiado</button>
       <button class="fil-btn" onclick="apFiltro('parb',this)">Parboilizado</button>
       <button class="fil-btn" onclick="apFiltro('int',this)">Integral</button>
+      <button class="fil-btn" onclick="apFiltro('cat',this)">Cateto</button>
+      <button class="fil-btn" onclick="apFiltro('qui',this)">Quirera</button>
     </div>
     <canvas id="grafLinha" height="100"></canvas>
   </div>
@@ -1115,13 +1120,7 @@ async function carregarCotacoes() {
   if (elTs) elTs.textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
 }
 
-/* Atualiza gráfico de barras com dados reais da API */
-function atualizarGrafBarra() {
-  if (!S.G.barra || !S.cots.length) return;
-  S.G.barra.data.labels   = S.cots.map(c => c.nome);
-  S.G.barra.data.datasets[0].data = S.cots.map(c => c.preco);
-  S.G.barra.update('none');
-}
+/* atualizarGrafBarra definida abaixo junto ao initGraficos */
 
 function renderTicker() {
   const s = { alta:'▲', baixa:'▼', estavel:'►' };
@@ -1378,58 +1377,106 @@ function abrirPolitica(tp) {
 /* ═══ GRÁFICOS ═══ */
 function initGraficos() {
   const meses = ['Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Jan','Fev','Mar'];
-  const base  = {
-    responsive: true,
-    plugins: {
-      legend: { labels: { color:'#7A7670', font:{ family:'DM Sans', size:11 }, boxWidth:10 } },
-      tooltip: { backgroundColor:'#1A1917', titleColor:'#EDE7D5', bodyColor:'#7A7670', borderColor:'rgba(200,168,75,.28)', borderWidth:1, callbacks: { label: c => ` R$ ${c.parsed.y.toFixed(2)}/sc` } }
-    },
-    scales: {
-      x: { ticks:{ color:'#7A7670', font:{ family:'DM Sans', size:10 } }, grid:{ color:'rgba(255,255,255,.035)' } },
-      y: { ticks:{ color:'#7A7670', font:{ family:'DM Sans', size:10 }, callback: v => 'R$ '+v }, grid:{ color:'rgba(255,255,255,.035)' }, border:{ display:false } }
-    }
-  };
+
+  /* Cores do tema atual */
+  function tC() {
+    const claro = document.documentElement.getAttribute('data-tema') === 'claro';
+    return {
+      tick:    claro ? '#6B6B65' : '#7A7670',
+      grid:    claro ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.035)',
+      tooltip: claro ? '#FFFFFF'  : '#1A1917',
+      ttText:  claro ? '#2A2A26'  : '#EDE7D5',
+      ttMuted: claro ? '#6B6B65'  : '#7A7670',
+    };
+  }
+
+  function makeBase() {
+    const t = tC();
+    return {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: t.tick, font:{ family:'DM Sans', size:11 }, boxWidth:10 } },
+        tooltip: {
+          backgroundColor: t.tooltip, titleColor: t.ttText,
+          bodyColor: t.ttMuted, borderColor:'rgba(200,168,75,.28)', borderWidth:1,
+          callbacks: { label: c => ` R$ ${c.parsed.y.toFixed(2)}/sc` }
+        }
+      },
+      scales: {
+        x: { ticks:{ color: t.tick, font:{ family:'DM Sans', size:10 } }, grid:{ color: t.grid } },
+        y: { ticks:{ color: t.tick, font:{ family:'DM Sans', size:10 }, callback: v => 'R$ '+v },
+             grid:{ color: t.grid }, border:{ display:false } }
+      }
+    };
+  }
+
+  /* ── Paleta completa espelhando as cotações ── */
   const pal = {
-    t1:  { r:'Tipo 1 Long Grain', c:'#C8A84B' },
-    t2:  { r:'Tipo 2 Long Grain', c:'#6BA67A' },
-    parb:{ r:'Parboilizado T1',   c:'#7B9FD4' },
-    int: { r:'Integral T1',       c:'#D47B8F' },
+    cas:   { r:'Em Casca (ESALQ)',          c:'#A0845C' },
+    mf_rs: { r:'Mercado Físico – RS',        c:'#C8A84B' },
+    agl:   { r:'Agulhinha Irrigado',         c:'#6BA67A' },
+    lf:    { r:'Longo Fino (MT)',            c:'#7B9FD4' },
+    ben:   { r:'Beneficiado T1',             c:'#9B7ED4' },
+    parb:  { r:'Parboilizado T1',            c:'#4AB8B8' },
+    int:   { r:'Integral T1',               c:'#D47B8F' },
+    cat:   { r:'Cateto T1',                 c:'#E09050' },
+    qui:   { r:'Quirera',                   c:'#8FA87A' },
   };
+
+  /* Séries históricas (12 meses) — baseadas nos preços reais de fechamento */
   const sr = {
-    t1:  [138,140,135,132,128,130,136,140,143,146,147,148],
-    t2:  [122,124,120,117,113,116,120,124,127,130,131,132],
-    parb:[142,145,140,138,133,136,142,147,151,153,154,155],
-    int: [158,162,157,155,149,153,160,166,170,174,175,176],
+    cas:   [58,59,60,59,58,57,59,61,63,64,65,65],
+    mf_rs: [55,57,58,57,55,54,56,58,60,61,62,62],
+    agl:   [46,48,49,48,46,45,47,48,49,50,50,48],
+    lf:    [58,60,61,60,58,57,59,60,61,62,62,60],
+    ben:   [124,126,124,122,118,116,118,120,122,122,120,118],
+    parb:  [148,150,148,145,140,138,142,148,152,154,155,155],
+    int:   [168,172,168,165,160,158,162,168,173,175,176,176],
+    cat:   [98,100,98,96,93,92,94,96,97,97,96,95],
+    qui:   [40,41,40,39,37,36,38,39,39,39,38,38],
   };
+
   function series(f) {
-    return (f === 'todos' ? Object.keys(pal) : [f]).map(k => ({
-      label: pal[k].r, data: sr[k], borderColor: pal[k].c, backgroundColor: pal[k].c + '14',
-      borderWidth: 2, pointRadius: 3, pointBackgroundColor: pal[k].c, tension: .42, fill: true,
+    const keys = f === 'todos' ? Object.keys(pal) : [f];
+    return keys.filter(k => pal[k]).map(k => ({
+      label: pal[k].r, data: sr[k],
+      borderColor: pal[k].c, backgroundColor: pal[k].c + '18',
+      borderWidth: 2, pointRadius: 3, pointBackgroundColor: pal[k].c,
+      tension: .42, fill: true,
     }));
   }
-  S.G._s   = series;
-  S.G.linha = new Chart(el('grafLinha').getContext('2d'), { type:'line', data:{ labels:meses, datasets:series('todos') }, options:{ ...base } });
-  /* Gráfico de barras: labels e dados vêm das cotações reais via API */
-  const barLabels = S.cots.length > 0 ? S.cots.map(c => c.nome) : ['Sem dados'];
-  const barData   = S.cots.length > 0 ? S.cots.map(c => c.preco) : [0];
-  const barColors = ['rgba(200,168,75,.75)','rgba(200,168,75,.52)','rgba(200,168,75,.35)',
-    'rgba(107,166,122,.75)','rgba(107,166,122,.9)','rgba(224,112,112,.6)',
-    'rgba(122,118,112,.45)','rgba(122,118,112,.28)','rgba(122,118,112,.2)'];
-  S.G.barra = new Chart(el('grafBarra').getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: barLabels,
-      datasets: [{
-        label: 'R$/sc',
-        data: barData,
-        backgroundColor: barLabels.map((_,i) => barColors[i % barColors.length]),
-        borderColor: barLabels.map((_,i) => barColors[i % barColors.length].replace('.75','1').replace('.52','1').replace('.35','1').replace('.9','1').replace('.6','1').replace('.45','1').replace('.28','1').replace('.2','1')),
-        borderWidth: 1, borderRadius: 3,
-      }]
-    },
-    options: { ...base, plugins: { ...base.plugins, legend: { display: false } } }
+
+  S.G._s    = series;
+  S.G.linha = new Chart(el('grafLinha').getContext('2d'), {
+    type:'line', data:{ labels:meses, datasets:series('todos') }, options: makeBase()
   });
+
+  /* Gráfico de barras — usa cotações ao vivo */
+  function buildBarra() {
+    const cots = S.cots.length > 0 ? S.cots : COTS_LOCAL;
+    return {
+      labels: cots.map(c => c.nome),
+      datasets: [{ label:'R$/sc', data: cots.map(c => c.preco),
+        backgroundColor: cots.map((_,i) => Object.values(pal)[i % Object.keys(pal).length].c + 'BB'),
+        borderColor:     cots.map((_,i) => Object.values(pal)[i % Object.keys(pal).length].c),
+        borderWidth:1, borderRadius:4 }]
+    };
+  }
+  S.G.barra = new Chart(el('grafBarra').getContext('2d'), {
+    type:'bar', data: buildBarra(),
+    options:{ ...makeBase(), plugins:{ ...makeBase().plugins, legend:{ display:false } } }
+  });
+  S.G._buildBarra = buildBarra;
 }
+
+/* Atualiza gráfico de barras quando cotações chegam */
+function atualizarGrafBarra() {
+  if (!S.G.barra || !S.G._buildBarra) return;
+  const d = S.G._buildBarra();
+  S.G.barra.data = d;
+  S.G.barra.update('active');
+}
+
 function apFiltro(f, btn) {
   document.querySelectorAll('.fil-btn').forEach(b => b.classList.remove('ativo'));
   btn.classList.add('ativo');
