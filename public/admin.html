@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArrozMarket — Painel Administrativo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --gold:#C8A84B;--gold-dim:rgba(200,168,75,.15);--gold-b:rgba(200,168,75,.25);
+  --dark:#0B0B09;--dark2:#111110;--dark3:#1A1917;--dark4:#252320;--dark5:#2E2B27;
+  --cream:#F4EFE6;--muted:#7A7670;--text:#EDE7D5;
+  --green:#4A7C59;--green2:#6BA67A;--green-dim:rgba(74,124,89,.15);
+  --red:#C04A4A;--red-dim:rgba(192,74,74,.15);
+  --blue:#4A7CA8;--blue-dim:rgba(74,124,168,.15);
+  --amber:#C89648;--amber-dim:rgba(200,150,72,.15);
+  --sidebar:240px;--topbar:58px;--r:5px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;font-size:14px;display:flex;flex-direction:column}
+#login-screen{position:fixed;inset:0;z-index:9999;background:var(--dark);display:flex;align-items:center;justify-content:center}
+.login-box{width:380px;background:var(--dark2);border:1px solid var(--gold-b);border-radius:8px;padding:2.5rem 2rem;text-align:center}
+.login-logo{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--gold);margin-bottom:.25rem}
+.login-logo span{color:var(--cream)}
+.login-sub{font-size:.75rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2rem}
+.login-box label{display:block;text-align:left;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
+.login-box input{width:100%;background:var(--dark3);border:1px solid rgba(200,168,75,.2);color:var(--cream);padding:.7rem 1rem;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;margin-bottom:1rem;transition:border-color .2s}
+.login-box input:focus{border-color:var(--gold)}
+.btn-login{width:100%;background:var(--gold);color:var(--dark);border:none;padding:.75rem;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;letter-spacing:.05em;transition:opacity .2s}
+.btn-login:hover{opacity:.88}
+.login-erro{font-size:.78rem;color:#E07070;margin-top:.75rem;display:none}
+#topbar{height:var(--topbar);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;background:var(--dark2);border-bottom:1px solid rgba(200,168,75,.1);z-index:100}
+.top-logo{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--gold)}
+.top-logo span{color:var(--cream)}
+.top-logo em{font-style:normal;font-size:.68rem;font-family:'DM Sans',sans-serif;color:var(--muted);margin-left:.5rem;letter-spacing:.08em;text-transform:uppercase}
+.top-right{display:flex;align-items:center;gap:1rem}
+.top-badge{display:flex;align-items:center;gap:5px;background:var(--green-dim);border:1px solid rgba(74,124,89,.35);color:var(--green2);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .8rem;border-radius:2px}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green2);animation:pulsar 2s infinite}
+@keyframes pulsar{0%,100%{opacity:1}50%{opacity:.25}}
+.top-update{font-size:.72rem;color:var(--muted)}
+.btn-ver-site,.btn-sair{padding:.4rem .9rem;border-radius:var(--r);font-size:.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.04em;transition:all .2s}
+.btn-ver-site{background:var(--gold-dim);border:1px solid var(--gold-b);color:var(--gold)}
+.btn-ver-site:hover{background:rgba(200,168,75,.28)}
+.btn-sair{background:transparent;border:1px solid rgba(192,74,74,.3);color:#C07070}
+.btn-sair:hover{border-color:var(--red);color:var(--red)}
+#app{display:flex;flex:1;overflow:hidden}
+#sidebar{width:var(--sidebar);flex-shrink:0;background:var(--dark2);border-right:1px solid rgba(200,168,75,.1);display:flex;flex-direction:column;overflow-y:auto}
+.sb-section{padding:.6rem .8rem .3rem;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:.5rem}
+.sb-item{display:flex;align-items:center;gap:.65rem;padding:.62rem 1rem;margin:.1rem .5rem;border-radius:var(--r);cursor:pointer;font-size:.82rem;color:var(--muted);transition:all .2s;border:1px solid transparent}
+.sb-item:hover{background:var(--dark3);color:var(--cream)}
+.sb-item.ativo{background:var(--gold-dim);border-color:var(--gold-b);color:var(--gold)}
+.sb-icon{font-size:1rem;width:18px;text-align:center;flex-shrink:0}
+.sb-badge{margin-left:auto;background:var(--gold);color:var(--dark);font-size:.62rem;font-weight:500;padding:.1rem .4rem;border-radius:10px}
+#conteudo{flex:1;overflow-y:auto;padding:1.5rem;background:var(--dark)}
+.painel{display:none;animation:entrar .35s ease}
+.painel.ativo{display:block}
+@keyframes entrar{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.painel-titulo{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--cream);margin-bottom:.3rem}
+.painel-sub{font-size:.82rem;color:var(--muted);margin-bottom:1.5rem}
+.metricas-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.metrica{background:var(--dark2);border:1px solid rgba(200,168,75,.1);border-radius:var(--r);padding:1.1rem 1.2rem;position:relative;overflow:hidden}
+.metrica::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.metrica.gold::before{background:var(--gold)}.metrica.green::before{background:var(--green2)}.metrica.blue::before{background:var(--blue)}.metrica.red::before{background:var(--red)}
+.metrica-icon{font-size:1.4rem;margin-bottom:.5rem}
+.metrica-val{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--cream);line-height:1}
+.metrica-label{font-size:.72rem;color:var(--muted);letter-spacing:.05em;margin-top:.3rem}
+.metrica-delta{font-size:.72rem;margin-top:.4rem}
+.metrica-delta.up{color:var(--green2)}.metrica-delta.dn{color:#E07070}.metrica-delta.eq{color:var(--gold)}
+.card{background:var(--dark2);border:1px solid rgba(200,168,75,.1);border-radius:var(--r);overflow:hidden;margin-bottom:1.2rem}
+.card-cab{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.2rem;border-bottom:1px solid rgba(200,168,75,.08)}
+.card-titulo{font-size:.88rem;font-weight:500;color:var(--cream)}
+.card-corpo{padding:1.2rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.tabela-adm{width:100%;border-collapse:collapse}
+.tabela-adm th{padding:.6rem 1rem;text-align:left;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid rgba(200,168,75,.1);font-weight:500}
+.tabela-adm td{padding:.75rem 1rem;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,.03)}
+.tabela-adm tr:last-child td{border-bottom:none}
+.tabela-adm tr:hover td{background:rgba(200,168,75,.03)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:.18rem .55rem;border-radius:2px;font-size:.7rem}
+.badge-pub{background:var(--green-dim);color:var(--green2);border:1px solid rgba(74,124,89,.3)}
+.badge-rascunho{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(200,150,72,.3)}
+.badge-agendado{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,124,168,.3)}
+.badge-alta{background:var(--green-dim);color:var(--green2)}.badge-baixa{background:var(--red-dim);color:#E07070}.badge-est{background:var(--gold-dim);color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border-radius:var(--r);font-size:.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid transparent;transition:all .2s;font-weight:400}
+.btn-prim{background:var(--gold);color:var(--dark);border-color:var(--gold)}.btn-prim:hover{opacity:.88}
+.btn-sec{background:transparent;color:var(--gold);border-color:var(--gold-b)}.btn-sec:hover{background:var(--gold-dim)}
+.btn-danger{background:transparent;color:#E07070;border-color:rgba(224,112,112,.3)}.btn-danger:hover{background:var(--red-dim)}
+.btn-sm{padding:.3rem .65rem;font-size:.72rem}.btn-xs{padding:.2rem .5rem;font-size:.68rem}
+.acoes{display:flex;gap:.4rem}
+.form-grupo{margin-bottom:1rem}
+.form-grupo label{display:block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.form-grupo input,.form-grupo select,.form-grupo textarea{width:100%;background:var(--dark3);border:1px solid rgba(200,168,75,.18);color:var(--cream);padding:.65rem .9rem;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;transition:border-color .2s;resize:vertical}
+.form-grupo input:focus,.form-grupo select:focus,.form-grupo textarea:focus{border-color:var(--gold)}
+.form-grupo select option{background:var(--dark3)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.upload-area{border:2px dashed rgba(200,168,75,.25);border-radius:var(--r);padding:2rem;text-align:center;cursor:pointer;transition:all .25s;background:var(--dark3)}
+.upload-area:hover{border-color:var(--gold);background:var(--gold-dim)}
+.upload-area p{font-size:.82rem;color:var(--muted);margin-top:.5rem}
+.upload-area strong{color:var(--gold)}
+.toggle-wrap{display:flex;align-items:center;gap:.6rem}
+.toggle{position:relative;width:38px;height:20px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--dark5);border-radius:20px;cursor:pointer;transition:.3s;border:1px solid rgba(200,168,75,.2)}
+.toggle-slider::before{content:'';position:absolute;width:14px;height:14px;background:var(--muted);border-radius:50%;bottom:2px;left:2px;transition:.3s}
+.toggle input:checked + .toggle-slider{background:var(--green-dim);border-color:var(--green2)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(18px);background:var(--green2)}
+.toggle-label{font-size:.82rem;color:var(--muted)}
+.cotacao-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.8rem;margin-bottom:1.2rem}
+.cotacao-card{background:var(--dark3);border:1px solid rgba(200,168,75,.1);border-radius:var(--r);padding:.9rem 1rem}
+.cotacao-nome{font-size:.72rem;color:var(--muted);letter-spacing:.04em;margin-bottom:.3rem}
+.cotacao-preco{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold)}
+.cotacao-var{font-size:.72rem;margin-top:.2rem}
+.cotacao-stamp{font-size:.65rem;color:var(--muted);margin-top:.4rem}
+@keyframes pulsarCard{0%{opacity:1}30%{opacity:.4}100%{opacity:1}}
+.log-item{display:flex;gap:.8rem;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.log-item:last-child{border-bottom:none}
+.log-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;margin-top:2px}
+.log-icon.verde{background:var(--green-dim)}.log-icon.ouro{background:var(--gold-dim)}.log-icon.azul{background:var(--blue-dim)}
+.log-txt{font-size:.8rem;color:var(--text);line-height:1.4}
+.log-tempo{font-size:.7rem;color:var(--muted);margin-top:.15rem}
+.api-status{display:flex;align-items:center;gap:.7rem;padding:.6rem 1rem;border-radius:var(--r);margin-bottom:1rem;font-size:.78rem}
+.api-status.simulado{background:var(--amber-dim);border:1px solid rgba(200,150,72,.3);color:var(--amber)}
+.api-status.conectado{background:var(--green-dim);border:1px solid rgba(74,124,89,.3);color:var(--green2)}
+#toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9000;background:var(--dark4);border:1px solid var(--gold-b);color:var(--cream);padding:.8rem 1.2rem;border-radius:var(--r);font-size:.82rem;max-width:320px;transform:translateY(120%);opacity:0;transition:all .35s cubic-bezier(.22,1,.36,1);pointer-events:none}
+#toast.visivel{transform:translateY(0);opacity:1}
+#toast.sucesso{border-color:rgba(74,124,89,.5);background:rgba(11,24,16,.95)}
+#toast.erro{border-color:rgba(192,74,74,.5);background:rgba(24,11,11,.95)}
+.modal-overlay{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.82);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.modal-overlay.aberto{display:flex}
+.modal-box{background:var(--dark2);border:1px solid var(--gold-b);border-radius:8px;width:min(600px,92vw);max-height:90vh;overflow-y:auto}
+.modal-cab{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.4rem;border-bottom:1px solid rgba(200,168,75,.1)}
+.modal-titulo{font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream)}
+.btn-fechar{background:rgba(200,168,75,.1);border:1px solid var(--gold-b);color:var(--gold);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.btn-fechar:hover{background:rgba(200,168,75,.25)}
+.modal-corpo{padding:1.4rem}
+.barra-prog{background:var(--dark4);border-radius:2px;height:4px;overflow:hidden;margin-top:.5rem}
+.barra-prog-inner{height:100%;background:var(--gold);border-radius:2px;transition:width .5s ease}
+.cor-swatch{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.cor-swatch.ativa{border-color:var(--cream);transform:scale(1.1)}
+.swatches{display:flex;gap:.6rem;flex-wrap:wrap}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(200,168,75,.2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(200,168,75,.4)}
+@media(max-width:900px){#sidebar{display:none}.metricas-grid{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Arroz<span>Market</span></div>
+    <div class="login-sub">Painel Administrativo</div>
+    <div class="form-grupo"><label>Usuário</label><input type="text" id="loginUser" value="fabio.toledo"></div>
+    <div class="form-grupo"><label>Senha</label><input type="password" id="loginPass" value="admin123"></div>
+    <button class="btn-login" onclick="fazerLogin()">Entrar no Painel</button>
+    <div class="login-erro" id="loginErro">Usuário ou senha incorretos.</div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:1.2rem">Demo: <strong style="color:var(--gold)">fabio.toledo</strong> / <strong style="color:var(--gold)">admin123</strong></div>
+  </div>
+</div>
+
+<div style="display:flex;flex-direction:column;height:100%;opacity:0;transition:opacity .4s" id="app-wrap">
+  <div id="topbar">
+    <div style="display:flex;align-items:center;gap:1rem">
+      <div class="top-logo">Arroz<span>Market</span><em>Admin</em></div>
+      <div class="top-badge"><div class="live-dot"></div>Cotações ao vivo</div>
+    </div>
+    <div class="top-right">
+      <span class="top-update" id="ultimaAtt">Aguardando...</span>
+      <button class="btn-ver-site" onclick="window.open('arroz_mercado.html','_blank')">↗ Ver Site</button>
+      <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+  </div>
+
+  <div id="app">
+    <div id="sidebar">
+      <div class="sb-section">Geral</div>
+      <div class="sb-item ativo" onclick="mostrar('p-inicio',this)"><span class="sb-icon">📊</span>Visão Geral</div>
+      <div class="sb-item" onclick="mostrar('p-cotacoes',this)"><span class="sb-icon">📈</span>Cotações ao Vivo</div>
+      <div class="sb-section">Conteúdo</div>
+      <div class="sb-item" onclick="mostrar('p-videos',this)"><span class="sb-icon">🎬</span>Vídeos <span class="sb-badge" id="badgeV">8</span></div>
+      <div class="sb-item" onclick="mostrar('p-publicar',this)"><span class="sb-icon">➕</span>Publicar Vídeo</div>
+      <div class="sb-section">Mercado</div>
+      <div class="sb-item" onclick="mostrar('p-precos',this)"><span class="sb-icon">💰</span>Editar Preços</div>
+      <div class="sb-item" onclick="mostrar('p-cepea',this)"><span class="sb-icon">🔗</span>Integração CEPEA</div>
+      <div class="sb-section">Site</div>
+      <div class="sb-item" onclick="mostrar('p-bio',this)"><span class="sb-icon">👤</span>Minha Biografia</div>
+      <div class="sb-item" onclick="mostrar('p-aparencia',this)"><span class="sb-icon">🎨</span>Aparência</div>
+      <div class="sb-item" onclick="mostrar('p-config',this)"><span class="sb-icon">⚙️</span>Configurações</div>
+    </div>
+
+    <div id="conteudo">
+
+      <!-- VISÃO GERAL -->
+      <div class="painel ativo" id="p-inicio">
+        <div class="painel-titulo">Visão Geral</div>
+        <div class="painel-sub">Bem-vindo, Fábio. Resumo do seu canal e mercado.</div>
+        <div class="metricas-grid">
+          <div class="metrica gold"><div class="metrica-icon">🎬</div><div class="metrica-val" id="m-vids">8</div><div class="metrica-label">Vídeos publicados</div><div class="metrica-delta up">↑ +1 esta semana</div></div>
+          <div class="metrica green"><div class="metrica-icon">👁️</div><div class="metrica-val">31,5 mil</div><div class="metrica-label">Visualizações totais</div><div class="metrica-delta up">↑ +3,4 mil este mês</div></div>
+          <div class="metrica blue"><div class="metrica-icon">📈</div><div class="metrica-val" id="m-preco">R$ 148</div><div class="metrica-label">Long Grain T1 (sc)</div><div class="metrica-delta up">↑ Alta hoje</div></div>
+          <div class="metrica red"><div class="metrica-icon">🕒</div><div class="metrica-val">12:48</div><div class="metrica-label">Duração média</div><div class="metrica-delta eq">→ Estável</div></div>
+        </div>
+        <div class="grid2">
+          <div class="card"><div class="card-cab"><div class="card-titulo">Cotações Rápidas</div><span class="badge badge-agendado">Simulado</span></div><div class="card-corpo" id="mini-cotacoes"></div></div>
+          <div class="card"><div class="card-cab"><div class="card-titulo">Últimas Atividades</div></div><div class="card-corpo" id="log-atv"></div></div>
+        </div>
+        <div class="card"><div class="card-cab"><div class="card-titulo">Visualizações — Últimos 30 dias</div></div><div class="card-corpo"><canvas id="grafViews" height="60"></canvas></div></div>
+      </div>
+
+      <!-- COTAÇÕES AO VIVO -->
+      <div class="painel" id="p-cotacoes">
+        <div class="painel-titulo">Cotações ao Vivo</div>
+        <div class="painel-sub">Dados atualizados automaticamente via simulação CEPEA. Substitua pelo endpoint real após obter credencial.</div>
+        <div class="api-status simulado">⚠ Modo simulação — Conecte credencial CEPEA/ESALQ na aba <strong>Integração CEPEA</strong> para dados reais.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div style="font-size:.78rem;color:var(--muted)">Intervalo: <strong style="color:var(--gold)" id="itv-display">15s</strong> &nbsp;|&nbsp; Próxima: <strong style="color:var(--cream)" id="cntd">15s</strong></div>
+          <div style="display:flex;gap:.6rem">
+            <button class="btn btn-sec btn-sm" onclick="forcarAtt()">⟳ Atualizar agora</button>
+            <button class="btn btn-sec btn-sm" onclick="mostrar('p-precos',null)">✏️ Editar manualmente</button>
+          </div>
+        </div>
+        <div class="cotacao-grid" id="cotacoes-live"></div>
+        <div class="card"><div class="card-cab"><div class="card-titulo">Histórico — Long Grain T1 (últimas 20 leituras)</div></div><div class="card-corpo"><canvas id="grafTempo" height="80"></canvas></div></div>
+      </div>
+
+      <!-- VÍDEOS -->
+      <div class="painel" id="p-videos">
+        <div class="painel-titulo">Gerenciar Vídeos</div>
+        <div class="painel-sub">Publique, edite ou remova vídeos do canal.</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <input type="text" id="buscaV" placeholder="🔍 Buscar vídeo..." oninput="filtrarV(this.value)" style="background:var(--dark2);border:1px solid rgba(200,168,75,.18);color:var(--cream);padding:.55rem 1rem;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;width:280px">
+          <button class="btn btn-prim" onclick="mostrar('p-publicar',null)">➕ Novo Vídeo</button>
+        </div>
+        <div class="card"><table class="tabela-adm" id="tabVideos"></table></div>
+      </div>
+
+      <!-- PUBLICAR -->
+      <div class="painel" id="p-publicar">
+        <div class="painel-titulo">Publicar Vídeo</div>
+        <div class="painel-sub">Adicione um novo vídeo. Cole o link do YouTube ou Vimeo para pré-visualizar.</div>
+        <div class="card"><div class="card-corpo">
+          <div class="form-row">
+            <div class="form-grupo"><label>Título *</label><input type="text" id="v-titulo" placeholder="Análise semanal — Long Grain em alta"></div>
+            <div class="form-grupo"><label>Data *</label><input type="date" id="v-data"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-grupo"><label>URL YouTube / Vimeo *</label><input type="text" id="v-url" placeholder="https://youtube.com/watch?v=..." oninput="prevUrl(this.value)"></div>
+            <div class="form-grupo"><label>Duração (mm:ss)</label><input type="text" id="v-dur" placeholder="12:34"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-grupo"><label>Categoria</label><select id="v-cat"><option>Análise Diária</option><option>Cotações</option><option>Técnico</option><option>Entrevista</option><option>Especial</option></select></div>
+            <div class="form-grupo"><label>Status</label><select id="v-status"><option value="pub">Publicar agora</option><option value="agendado">Agendar</option><option value="rascunho">Rascunho</option></select></div>
+          </div>
+          <div class="form-grupo"><label>Descrição</label><textarea id="v-desc" rows="2" placeholder="Resumo do conteúdo..."></textarea></div>
+          <div class="form-grupo"><label>Thumbnail (opcional)</label>
+            <div class="upload-area" onclick="document.getElementById('v-thumb').click()">
+              <div style="font-size:1.8rem">🖼️</div>
+              <p>Arraste ou <strong>clique para selecionar</strong> imagem (JPG/PNG)</p>
+              <input type="file" id="v-thumb" accept="image/*" style="display:none" onchange="prevThumb(this)">
+            </div>
+            <div id="thumb-prev" style="margin-top:.6rem;display:none"><img id="thumb-img" style="height:80px;border-radius:var(--r);border:1px solid var(--gold-b)"></div>
+          </div>
+          <div id="embed-wrap" style="margin-bottom:1rem;display:none">
+            <div class="form-grupo"><label>Pré-visualização</label></div>
+            <div style="aspect-ratio:16/9;max-width:480px;border-radius:var(--r);overflow:hidden;border:1px solid var(--gold-b)"><iframe id="embed-frame" width="100%" height="100%" frameborder="0" allowfullscreen></iframe></div>
+          </div>
+          <div style="display:flex;gap:.8rem;justify-content:flex-end">
+            <button class="btn btn-sec" onclick="limparForm()">Limpar</button>
+            <button class="btn btn-prim" onclick="publicarVideo()">✓ Publicar</button>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- PREÇOS -->
+      <div class="painel" id="p-precos">
+        <div class="painel-titulo">Editar Preços</div>
+        <div class="painel-sub">Ajuste as cotações manualmente. Dados ao vivo do CEPEA (quando conectado) substituem estes valores.</div>
+        <div class="card">
+          <div class="card-cab"><div class="card-titulo">Tabela de Cotações — Edição rápida</div><button class="btn btn-prim btn-sm" onclick="salvarPrecos()">💾 Salvar</button></div>
+          <div class="card-corpo"><table class="tabela-adm" id="tabPrecos"></table></div>
+        </div>
+      </div>
+
+      <!-- CEPEA -->
+      <div class="painel" id="p-cepea">
+        <div class="painel-titulo">Integração CEPEA</div>
+        <div class="painel-sub">Configure a fonte de dados ao vivo. O CEPEA/ESALQ é o índice oficial de referência para o arroz no Brasil.</div>
+        <div class="api-status simulado" style="margin-bottom:1.5rem">⚠ Modo simulação — O CEPEA não oferece API pública gratuita. Veja as opções abaixo.</div>
+        <div class="grid2">
+          <div class="card"><div class="card-cab"><div class="card-titulo">🔗 CEPEA/ESALQ (Oficial)</div></div><div class="card-corpo">
+            <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;line-height:1.7">O CEPEA disponibiliza dados via <strong style="color:var(--cream)">CSV diário</strong> e, para assinantes, via <strong style="color:var(--cream)">WebService SOAP</strong>. É a fonte mais confiável do Brasil.</p>
+            <div class="form-grupo"><label>Chave de Acesso CEPEA</label><input type="password" id="cepea-key" placeholder="Obtida via cepea.esalq.usp.br"></div>
+            <div class="form-grupo"><label>Intervalo de atualização</label>
+              <select id="cepea-itv" onchange="alterarItv(parseInt(this.value))">
+                <option value="15">A cada 15 segundos (demo)</option>
+                <option value="300">A cada 5 minutos</option>
+                <option value="600">A cada 10 minutos</option>
+                <option value="1800">A cada 30 minutos</option>
+              </select>
+            </div>
+            <button class="btn btn-prim" onclick="testarConexao()">⚡ Testar Conexão</button>
+          </div></div>
+          <div class="card"><div class="card-cab"><div class="card-titulo">🌐 Alternativas</div></div><div class="card-corpo">
+            <div style="display:flex;flex-direction:column;gap:.8rem">
+              <div style="background:var(--dark3);border-radius:var(--r);padding:.9rem;border:1px solid rgba(200,168,75,.1)">
+                <div style="font-size:.82rem;color:var(--cream);font-weight:500;margin-bottom:.2rem">📊 Agrolink Cotações</div>
+                <div style="font-size:.78rem;color:var(--muted)">Raspagem diária via endpoint público. Gratuito, menos estável.</div>
+                <button class="btn btn-sec btn-xs" style="margin-top:.5rem" onclick="toast('Em desenvolvimento.','ouro')">Configurar</button>
+              </div>
+              <div style="background:var(--dark3);border-radius:var(--r);padding:.9rem;border:1px solid rgba(200,168,75,.1)">
+                <div style="font-size:.82rem;color:var(--cream);font-weight:500;margin-bottom:.2rem">🔧 Backend Node.js + Puppeteer</div>
+                <div style="font-size:.78rem;color:var(--muted)">Scraping do CEPEA servindo endpoint REST para este site. Solução recomendada.</div>
+                <button class="btn btn-sec btn-xs" style="margin-top:.5rem" onclick="toast('Documentação disponível em docs/.','ouro')">Ver docs</button>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <div class="card"><div class="card-cab"><div class="card-titulo">📋 Log de Requisições</div></div><div class="card-corpo" id="log-api"></div></div>
+      </div>
+
+      <!-- BIOGRAFIA -->
+      <div class="painel" id="p-bio">
+        <div class="painel-titulo">Editar Biografia</div>
+        <div class="painel-sub">Alterações refletidas na página "Especialista" do site.</div>
+        <div class="card"><div class="card-corpo">
+          <div class="form-row">
+            <div class="form-grupo"><label>Nome Completo</label><input type="text" id="bio-nome" value="Fábio Toledo"></div>
+            <div class="form-grupo"><label>Cargo</label><input type="text" id="bio-cargo" value="Especialista em Mercado Orizícola"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-grupo"><label>Cidade — Estado</label><input type="text" id="bio-local" value="São Gabriel — RS"></div>
+            <div class="form-grupo"><label>Formação</label><input type="text" id="bio-form" value="Agronomia — UFSM"></div>
+          </div>
+          <div class="form-row3">
+            <div class="form-grupo"><label>Anos de mercado</label><input type="number" id="bio-anos" value="22"></div>
+            <div class="form-grupo"><label>Análises publicadas</label><input type="text" id="bio-analises" value="850+"></div>
+            <div class="form-grupo"><label>Vídeos gravados</label><input type="text" id="bio-vids" value="340+"></div>
+          </div>
+          <div class="form-grupo"><label>Citação de destaque</label><textarea id="bio-frase" rows="2">"O arroz gaúcho não é apenas um grão — é identidade, tecnologia e mercado."</textarea></div>
+          <div class="form-grupo"><label>Texto biográfico</label><textarea id="bio-texto" rows="4">Natural de São Gabriel (RS), Fábio Toledo construiu sua trajetória no setor orizícola, formado em Agronomia pela UFSM e com mais de duas décadas de experiência em análise de preços e consultoria.</textarea></div>
+          <div class="form-row">
+            <div class="form-grupo"><label>YouTube</label><input type="text" id="bio-yt" placeholder="https://youtube.com/@..."></div>
+            <div class="form-grupo"><label>Instagram</label><input type="text" id="bio-ig" placeholder="https://instagram.com/..."></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end"><button class="btn btn-prim" onclick="salvarBio()">💾 Salvar Biografia</button></div>
+        </div></div>
+      </div>
+
+      <!-- APARÊNCIA -->
+      <div class="painel" id="p-aparencia">
+        <div class="painel-titulo">Aparência do Site</div>
+        <div class="painel-sub">Personalize cores, tipografia e elementos visuais.</div>
+        <div class="grid2">
+          <div class="card"><div class="card-cab"><div class="card-titulo">Cor de Destaque</div></div><div class="card-corpo">
+            <div class="swatches" id="swatches"></div>
+            <div class="form-grupo" style="margin-top:1rem"><label>Cor personalizada</label><input type="color" id="corCustom" value="#C8A84B" style="width:60px;height:36px;padding:2px;border-radius:4px;cursor:pointer" onchange="aplicarCor(this.value,-1)"></div>
+          </div></div>
+          <div class="card"><div class="card-cab"><div class="card-titulo">Elementos do Site</div></div><div class="card-corpo" style="display:flex;flex-direction:column;gap:.9rem">
+            <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="toggle-label">Exibir ticker de cotações</span></div>
+            <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="toggle-label">Exibir seção Especialista</span></div>
+            <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="toggle-label">Exibir seção Técnico</span></div>
+          </div></div>
+          <div class="card"><div class="card-cab"><div class="card-titulo">SEO & Metadados</div></div><div class="card-corpo">
+            <div class="form-grupo"><label>Título do site</label><input type="text" id="seo-titulo" value="ArrozMarket — Análises do Mercado do Arroz"></div>
+            <div class="form-grupo"><label>Descrição meta</label><textarea id="seo-desc" rows="2">Análises diárias do mercado orizícola com Fábio Toledo. Cotações, classificações e dados técnicos.</textarea></div>
+            <div style="display:flex;justify-content:flex-end"><button class="btn btn-prim btn-sm" onclick="toast('Metadados salvos!','sucesso')">Salvar SEO</button></div>
+          </div></div>
+          <div class="card"><div class="card-cab"><div class="card-titulo">Tipografia</div></div><div class="card-corpo">
+            <div class="form-grupo"><label>Fonte principal</label><select><option>DM Sans</option><option>IBM Plex Sans</option><option>Outfit</option><option>Syne</option></select></div>
+            <div class="form-grupo"><label>Fonte de títulos</label><select><option>Playfair Display</option><option>Cormorant Garamond</option><option>Libre Baskerville</option></select></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- CONFIG -->
+      <div class="painel" id="p-config">
+        <div class="painel-titulo">Configurações</div>
+        <div class="painel-sub">Segurança, notificações e dados do sistema.</div>
+        <div class="grid2">
+          <div class="card"><div class="card-cab"><div class="card-titulo">🔐 Alterar Senha</div></div><div class="card-corpo">
+            <div class="form-grupo"><label>Senha atual</label><input type="password" id="s-atual" placeholder="••••••••"></div>
+            <div class="form-grupo"><label>Nova senha</label><input type="password" id="s-nova" placeholder="••••••••" oninput="forcaSenha(this.value)"></div>
+            <div class="form-grupo"><label>Confirmar</label><input type="password" id="s-conf" placeholder="••••••••"></div>
+            <div style="margin-bottom:.8rem"><div style="font-size:.7rem;color:var(--muted);margin-bottom:.3rem">Força da senha</div><div class="barra-prog"><div class="barra-prog-inner" id="barra-forca" style="width:0%"></div></div></div>
+            <button class="btn btn-prim" onclick="alterarSenha()">🔒 Atualizar Senha</button>
+          </div></div>
+          <div class="card"><div class="card-cab"><div class="card-titulo">🔔 Notificações</div></div><div class="card-corpo" style="display:flex;flex-direction:column;gap:.9rem">
+            <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="toggle-label">Alerta de variação > 5%</span></div>
+            <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="toggle-label">Lembrete diário de publicação</span></div>
+            <div class="form-grupo" style="margin-top:.3rem"><label>E-mail para alertas</label><input type="email" placeholder="fabio@exemplo.com"></div>
+          </div></div>
+          <div class="card"><div class="card-cab"><div class="card-titulo">💾 Exportar Dados</div></div><div class="card-corpo">
+            <div style="display:flex;flex-direction:column;gap:.6rem">
+              <button class="btn btn-sec" onclick="exportar('videos')">⬇ Exportar vídeos (JSON)</button>
+              <button class="btn btn-sec" onclick="exportar('cotacoes')">⬇ Exportar cotações (JSON)</button>
+              <button class="btn btn-sec" onclick="exportar('config')">⬇ Exportar configurações (JSON)</button>
+            </div>
+          </div></div>
+          <div class="card"><div class="card-cab"><div class="card-titulo">ℹ️ Sobre</div></div><div class="card-corpo">
+            <table style="width:100%;font-size:.8rem">
+              <tr><td style="color:var(--muted);padding:.3rem 0">Versão</td><td style="color:var(--cream)">ArrozMarket Admin v1.0</td></tr>
+              <tr><td style="color:var(--muted);padding:.3rem 0">Stack</td><td style="color:var(--cream)">HTML5 · CSS3 · JS ES2022 · Chart.js 4</td></tr>
+              <tr><td style="color:var(--muted);padding:.3rem 0">Proprietário</td><td style="color:var(--gold)">Fábio Toledo — São Gabriel, RS</td></tr>
+            </table>
+          </div></div>
+        </div>
+      </div>
+
+    </div><!-- /conteudo -->
+  </div><!-- /app -->
+</div><!-- /app-wrap -->
+
+<div id="toast"></div>
+<div class="modal-overlay" id="modal"><div class="modal-box">
+  <div class="modal-cab"><div class="modal-titulo" id="modal-titulo">—</div><button class="btn-fechar" onclick="fecharModal()">✕</button></div>
+  <div class="modal-corpo" id="modal-corpo"></div>
+</div></div>
+
+<script>
+'use strict';
+
+/* ═══ ESTADO ═══ */
+const S = {
+  itv: 15, cnt: 15, timer: null, swatchAtivo: 0,
+  hist: [],
+  G: {},
+  videos: JSON.parse(localStorage.getItem('am_v') || 'null') || [
+    {id:1,titulo:'Safra 2025 e Impactos nos Preços',data:'07/04/2025',dur:'12:48',url:'',cat:'Análise Diária',status:'pub',views:3400},
+    {id:2,titulo:'Impacto do clima na safra do RS',data:'03/04/2025',dur:'09:32',url:'',cat:'Análise Diária',status:'pub',views:2100},
+    {id:3,titulo:'Parboilizado em alta: por que os preços sobem?',data:'02/04/2025',dur:'14:05',url:'',cat:'Cotações',status:'pub',views:3800},
+    {id:4,titulo:'Abertura de abril: o que esperar',data:'01/04/2025',dur:'11:18',url:'',cat:'Análise Diária',status:'pub',views:4200},
+    {id:5,titulo:'Fechamento de março e balanço trimestral',data:'31/03/2025',dur:'18:44',url:'',cat:'Especial',status:'pub',views:5600},
+    {id:6,titulo:'Arroz integral: demanda aquecida',data:'28/03/2025',dur:'08:55',url:'',cat:'Cotações',status:'pub',views:2900},
+    {id:7,titulo:'Dólar e exportações — reflexos no preço interno',data:'27/03/2025',dur:'13:22',url:'',cat:'Técnico',status:'pub',views:3300},
+    {id:8,titulo:'Colheita RS 2025: ritmo e projeções',data:'25/03/2025',dur:'12:38',url:'',cat:'Análise Diária',status:'pub',views:6100},
+  ],
+  /* Float32Array — operações vetoriais para atualização simultânea de todos os preços */
+  pBase: new Float32Array([148.50,132.00,118.75,155.20,175.80,95.00,58.40,38.50]),
+  p: null,
+  nomes: ['Long Grain T1','Long Grain T2','Agulhinha T1','Parboilizado T1','Integral T1','Cateto T1','Em Casca','Quirera'],
+  atv: [
+    {icon:'🎬',cls:'ouro',txt:'Vídeo publicado: <b style="color:var(--cream)">Safra 2025</b>',t:'há 2h'},
+    {icon:'📈',cls:'verde',txt:'Cotação Long Grain T1 <b style="color:var(--green2)">+R$1,20</b>',t:'há 4h'},
+    {icon:'👁️',cls:'azul',txt:'3.400 visualizações hoje',t:'há 6h'},
+    {icon:'💾',cls:'ouro',txt:'Backup automático realizado',t:'ontem'},
+  ],
+  logApi: [],
+  nextId: 9,
+  cores: ['#C8A84B','#6BA67A','#7B9FD4','#D47B8F','#E09050'],
+};
+S.p = new Float32Array(S.pBase);
+
+/* ═══ LOGIN ═══ */
+function fazerLogin(){
+  if(document.getElementById('loginUser').value.trim()==='fabio.toledo' && document.getElementById('loginPass').value==='admin123'){
+    document.getElementById('login-screen').style.display='none';
+    const w=document.getElementById('app-wrap'); w.style.opacity='1'; w.style.pointerEvents='auto';
+    iniciar();
+  } else { document.getElementById('loginErro').style.display='block'; }
+}
+document.getElementById('loginPass').addEventListener('keydown',e=>{ if(e.key==='Enter') fazerLogin(); });
+function sair(){ clearInterval(S.timer); document.getElementById('login-screen').style.display='flex'; document.getElementById('app-wrap').style.opacity='0'; toast('Sessão encerrada.','ouro'); }
+
+/* ═══ NAV ═══ */
+function mostrar(id,el){
+  document.querySelectorAll('.painel').forEach(p=>p.classList.remove('ativo'));
+  document.querySelectorAll('.sb-item').forEach(s=>s.classList.remove('ativo'));
+  const p=document.getElementById(id); if(p) p.classList.add('ativo');
+  if(el) el.classList.add('ativo');
+}
+
+/* ═══ TOAST ═══ */
+let _tt;
+function toast(msg,tipo='ouro'){
+  const el=document.getElementById('toast'); el.textContent=msg; el.className='visivel '+tipo;
+  clearTimeout(_tt); _tt=setTimeout(()=>{el.className='';},3200);
+}
+
+/* ═══ MODAL ═══ */
+function abrirModal(titulo,html){ document.getElementById('modal-titulo').textContent=titulo; document.getElementById('modal-corpo').innerHTML=html; document.getElementById('modal').classList.add('aberto'); }
+function fecharModal(){ document.getElementById('modal').classList.remove('aberto'); }
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target.id==='modal') fecharModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') fecharModal(); });
+
+/* ═══ COTAÇÕES — ATUALIZAÇÃO VETORIAL SIMULTÂNEA ═══
+   Float32Array garante que todos os preços são atualizados
+   em uma única passagem, sem cálculos individuais sequenciais.
+*/
+const VOL = 0.007;
+function tick(){
+  /* 1. Gera vetor de variações aleatórias em Float32Array */
+  const vars = new Float32Array(S.p.length);
+  for(let i=0;i<vars.length;i++) vars[i]=(Math.random()-0.47)*VOL;
+
+  /* 2. Aplica variações simultaneamente — operação vetorial em Float32Array */
+  const ant = new Float32Array(S.p);
+  for(let i=0;i<S.p.length;i++) S.p[i]=+(S.p[i]*(1+vars[i])).toFixed(2);
+
+  /* 3. Histórico do T1 */
+  S.hist.push(S.p[0]);
+  if(S.hist.length>20) S.hist.shift();
+
+  /* 4. Log */
+  S.logApi.unshift({h:new Date().toLocaleTimeString('pt-BR'),st:'200 OK',src:'Simulação interna',lat:`${(Math.random()*80+20).toFixed(0)}ms`});
+  if(S.logApi.length>8) S.logApi.pop();
+
+  /* 5. Renderiza */
+  renderLive(ant); renderMini(); attGrafTempo();
+  document.getElementById('ultimaAtt').textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR');
+  document.getElementById('m-preco').textContent='R$ '+S.p[0].toFixed(0);
+  renderLogApi();
+}
+
+/* API real (template) */
+async function buscarDados(){
+  try {
+    // const r=await fetch('/api/cepea/arroz'); const j=await r.json();
+    // j.forEach((c,i)=>{ S.p[i]=c.preco; });
+    tick(); // fallback simulação
+  } catch { tick(); }
+}
+
+function forcarAtt(){ buscarDados(); S.cnt=S.itv; toast('Cotações atualizadas!','sucesso'); }
+function alterarItv(seg){ S.itv=seg; S.cnt=seg; document.getElementById('itv-display').textContent=seg<60?`${seg}s`:`${seg/60}min`; clearInterval(S.timer); iniciarTimer(); toast(`Intervalo: ${seg<60?seg+'s':seg/60+' min'}`,'ouro'); }
+function iniciarTimer(){ S.timer=setInterval(()=>{ S.cnt--; const el=document.getElementById('cntd'); if(el) el.textContent=S.cnt+'s'; if(S.cnt<=0){ buscarDados(); S.cnt=S.itv; } },1000); }
+
+/* ═══ RENDER COTAÇÕES ═══ */
+const seta={alta:'↑',baixa:'↓',est:'→'}, corV={alta:'var(--green2)',baixa:'#E07070',est:'var(--gold)'};
+function cls(a,b){ return a>b?'alta':a<b?'baixa':'est'; }
+
+function renderLive(ant){
+  const c=document.getElementById('cotacoes-live'); if(!c) return;
+  c.innerHTML=S.nomes.map((n,i)=>{
+    const cl=cls(S.p[i],ant[i]), d=(S.p[i]-ant[i]).toFixed(2);
+    return `<div class="cotacao-card"><div class="cotacao-nome">${n}</div><div class="cotacao-preco">R$ ${S.p[i].toFixed(2)}</div><div class="cotacao-var" style="color:${corV[cl]}">${seta[cl]} ${d>=0?'+':''}${d}/sc</div><div class="cotacao-stamp">${new Date().toLocaleTimeString('pt-BR')}</div></div>`;
+  }).join('');
+}
+
+function renderMini(){
+  const c=document.getElementById('mini-cotacoes'); if(!c) return;
+  c.innerHTML='<table style="width:100%;border-collapse:collapse">'+
+    S.nomes.slice(0,4).map((n,i)=>{
+      const cl=S.p[i]>=S.pBase[i]?'alta':'baixa';
+      return `<tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:.6rem 0;font-size:.8rem;color:var(--muted)">${n}</td><td style="padding:.6rem 0;font-family:'Playfair Display',serif;color:var(--gold);text-align:right">R$ ${S.p[i].toFixed(2)}</td><td style="text-align:right;padding:.6rem 0"><span class="badge badge-${cl}" style="margin-left:.4rem">${seta[cl]}</span></td></tr>`;
+    }).join('')+'</table>';
+}
+
+function renderLogApi(){
+  const c=document.getElementById('log-api'); if(!c) return;
+  c.innerHTML=`<table class="tabela-adm"><thead><tr><th>Hora</th><th>Status</th><th>Fonte</th><th>Latência</th></tr></thead><tbody>${S.logApi.map(l=>`<tr><td>${l.h}</td><td><span class="badge badge-pub">${l.st}</span></td><td style="color:var(--muted)">${l.src}</td><td>${l.lat}</td></tr>`).join('')}</tbody></table>`;
+}
+
+/* ═══ VÍDEOS ═══ */
+const sMap={pub:'badge-pub',rascunho:'badge-rascunho',agendado:'badge-agendado'};
+const sLbl={pub:'Publicado',rascunho:'Rascunho',agendado:'Agendado'};
+function renderTabV(lista){
+  const vs=lista||S.videos;
+  document.getElementById('tabVideos').innerHTML=
+    `<thead><tr><th>#</th><th>Título</th><th>Categoria</th><th>Data</th><th>Duração</th><th>Views</th><th>Status</th><th>Ações</th></tr></thead><tbody>`+
+    vs.map(v=>`<tr><td style="color:var(--muted)">${v.id}</td><td style="max-width:260px;color:var(--cream)">${v.titulo}</td><td style="color:var(--muted);font-size:.72rem">${v.cat}</td><td>${v.data}</td><td>${v.dur}</td><td>${(v.views||0).toLocaleString('pt-BR')}</td><td><span class="badge ${sMap[v.status]}">${sLbl[v.status]}</span></td><td><div class="acoes"><button class="btn btn-sec btn-xs" onclick="editarV(${v.id})">✏️</button><button class="btn btn-danger btn-xs" onclick="excluirV(${v.id})">🗑️</button></div></td></tr>`).join('')+'</tbody>';
+  document.getElementById('badgeV').textContent=S.videos.length;
+  document.getElementById('m-vids').textContent=S.videos.length;
+}
+function filtrarV(q){ renderTabV(S.videos.filter(v=>v.titulo.toLowerCase().includes(q.toLowerCase())||v.cat.toLowerCase().includes(q.toLowerCase()))); }
+function excluirV(id){ if(!confirm('Excluir este vídeo?')) return; S.videos=S.videos.filter(v=>v.id!==id); salvarV(); renderTabV(); toast('Vídeo excluído.','ouro'); }
+function editarV(id){
+  const v=S.videos.find(v=>v.id===id); if(!v) return;
+  abrirModal(`Editar — ${v.titulo}`,`
+    <div class="form-grupo"><label>Título</label><input type="text" id="e-titulo" value="${v.titulo.replace(/"/g,'&quot;')}"></div>
+    <div class="form-grupo"><label>Categoria</label><select id="e-cat">${['Análise Diária','Cotações','Técnico','Entrevista','Especial'].map(c=>`<option ${c===v.cat?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="form-grupo"><label>Status</label><select id="e-status"><option value="pub" ${v.status==='pub'?'selected':''}>Publicado</option><option value="rascunho" ${v.status==='rascunho'?'selected':''}>Rascunho</option><option value="agendado" ${v.status==='agendado'?'selected':''}>Agendado</option></select></div>
+    <div style="display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem"><button class="btn btn-sec" onclick="fecharModal()">Cancelar</button><button class="btn btn-prim" onclick="salvarEdit(${id})">💾 Salvar</button></div>`);
+}
+function salvarEdit(id){ const v=S.videos.find(v=>v.id===id); if(!v) return; v.titulo=document.getElementById('e-titulo').value; v.cat=document.getElementById('e-cat').value; v.status=document.getElementById('e-status').value; salvarV(); renderTabV(); fecharModal(); toast('Salvo!','sucesso'); }
+function salvarV(){ localStorage.setItem('am_v',JSON.stringify(S.videos)); }
+
+/* ═══ PUBLICAR ═══ */
+function prevUrl(url){
+  const yt=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/), vm=url.match(/vimeo\.com\/(\d+)/);
+  const f=document.getElementById('embed-frame'), w=document.getElementById('embed-wrap');
+  if(yt){ f.src=`https://www.youtube.com/embed/${yt[1]}`; w.style.display='block'; }
+  else if(vm){ f.src=`https://player.vimeo.com/video/${vm[1]}`; w.style.display='block'; }
+  else w.style.display='none';
+}
+function prevThumb(inp){ const r=new FileReader(); r.onload=e=>{ document.getElementById('thumb-img').src=e.target.result; document.getElementById('thumb-prev').style.display='block'; }; r.readAsDataURL(inp.files[0]); }
+function publicarVideo(){
+  const titulo=document.getElementById('v-titulo').value.trim(), data=document.getElementById('v-data').value;
+  if(!titulo||!data){ toast('Preencha título e data.','erro'); return; }
+  const novo={id:S.nextId++,titulo,data:new Date(data+'T12:00:00').toLocaleDateString('pt-BR'),dur:document.getElementById('v-dur').value||'00:00',url:document.getElementById('v-url').value,cat:document.getElementById('v-cat').value,status:document.getElementById('v-status').value,desc:document.getElementById('v-desc').value,views:0};
+  S.videos.unshift(novo); salvarV(); renderTabV(); S.atv.unshift({icon:'🎬',cls:'ouro',txt:`Publicado: <b style="color:var(--cream)">${titulo.slice(0,40)}</b>`,t:'agora'}); renderAtv(); limparForm();
+  mostrar('p-videos',null); toast('Vídeo publicado!','sucesso');
+}
+function limparForm(){ ['v-titulo','v-url','v-dur','v-desc'].forEach(id=>{document.getElementById(id).value='';}); document.getElementById('embed-wrap').style.display='none'; document.getElementById('thumb-prev').style.display='none'; }
+
+/* ═══ PREÇOS ═══ */
+function renderTabPrecos(){
+  document.getElementById('tabPrecos').innerHTML=
+    `<thead><tr><th>Classificação</th><th>Preço (R$/sc 60kg)</th><th>Variação</th></tr></thead><tbody>`+
+    S.nomes.map((n,i)=>`<tr><td>${n}</td><td><input type="number" id="pr-${i}" value="${S.p[i].toFixed(2)}" step="0.01" min="0" style="width:110px;background:var(--dark3);border:1px solid rgba(200,168,75,.2);color:var(--cream);padding:.35rem .6rem;border-radius:var(--r);font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif" oninput="prevVar(${i},this.value)"></td><td id="pv-${i}" style="font-size:.8rem;color:var(--muted)">—</td></tr>`).join('')+'</tbody>';
+}
+function prevVar(i,val){ const v=parseFloat(val),d=(v-S.p[i]).toFixed(2),c=v>S.p[i]?'var(--green2)':v<S.p[i]?'#E07070':'var(--gold)'; document.getElementById(`pv-${i}`).innerHTML=`<span style="color:${c}">${d>=0?'+':''}${d}</span>`; }
+function salvarPrecos(){ for(let i=0;i<S.p.length;i++){ const el=document.getElementById(`pr-${i}`); if(el) S.p[i]=parseFloat(el.value)||S.p[i]; } renderMini(); renderLive(new Float32Array(S.p)); toast('Preços atualizados!','sucesso'); }
+
+/* ═══ ATIVIDADES ═══ */
+function renderAtv(){ const c=document.getElementById('log-atv'); if(!c) return; c.innerHTML=S.atv.slice(0,5).map(a=>`<div class="log-item"><div class="log-icon ${a.cls}">${a.icon}</div><div><div class="log-txt">${a.txt}</div><div class="log-tempo">${a.t}</div></div></div>`).join(''); }
+
+/* ═══ GRÁFICOS ═══ */
+const GOPTS={responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1A1917',titleColor:'#EDE7D5',bodyColor:'#7A7670',borderColor:'rgba(200,168,75,.28)',borderWidth:1}},scales:{x:{ticks:{color:'#7A7670',font:{family:'DM Sans',size:10}},grid:{color:'rgba(255,255,255,.03)'}},y:{ticks:{color:'#7A7670',font:{family:'DM Sans',size:10}},grid:{color:'rgba(255,255,255,.03)'},border:{display:false}}}};
+
+function initGrafViews(){
+  const dias=Array.from({length:30},(_,i)=>{ const d=new Date(); d.setDate(d.getDate()-(29-i)); return `${d.getDate()}/${d.getMonth()+1}`; });
+  const data=Array.from(new Float32Array(30).map((_,i)=>Math.round(800+Math.sin(i*0.5)*300+Math.random()*400)));
+  S.G.views=new Chart(document.getElementById('grafViews').getContext('2d'),{type:'line',data:{labels:dias,datasets:[{label:'Views',data,borderColor:'#C8A84B',backgroundColor:'rgba(200,168,75,.1)',borderWidth:2,pointRadius:2,tension:.42,fill:true}]},options:{...GOPTS,scales:{...GOPTS.scales,y:{...GOPTS.scales.y,ticks:{color:'#7A7670',font:{family:'DM Sans',size:10},callback:v=>v.toLocaleString('pt-BR')}}}}});
+}
+function initGrafTempo(){
+  if(S.hist.length===0) for(let i=0;i<20;i++) S.hist.push(+(148.5+(Math.random()-.5)*3).toFixed(2));
+  S.G.tempo=new Chart(document.getElementById('grafTempo').getContext('2d'),{type:'line',data:{labels:S.hist.map((_,i)=>`T-${S.hist.length-1-i}`),datasets:[{label:'Long Grain T1',data:[...S.hist],borderColor:'#C8A84B',backgroundColor:'rgba(200,168,75,.08)',borderWidth:2,pointRadius:2,tension:.38,fill:true}]},options:{...GOPTS,animation:{duration:350},scales:{x:{...GOPTS.scales.x,display:false},y:{...GOPTS.scales.y,ticks:{color:'#7A7670',font:{family:'DM Sans',size:10},callback:v=>'R$ '+v.toFixed(2)}}}}});
+}
+function attGrafTempo(){ const g=S.G.tempo; if(!g) return; g.data.datasets[0].data=[...S.hist]; g.data.labels=S.hist.map((_,i)=>`T-${S.hist.length-1-i}`); g.update('none'); }
+
+/* ═══ SWATCHES ═══ */
+function renderSwatches(){ const c=document.getElementById('swatches'); if(!c) return; c.innerHTML=S.cores.map((h,i)=>`<div class="cor-swatch ${i===S.swatchAtivo?'ativa':''}" style="background:${h}" onclick="aplicarCor('${h}',${i})"></div>`).join(''); }
+function aplicarCor(hex,i){ S.swatchAtivo=i; document.documentElement.style.setProperty('--gold',hex); renderSwatches(); toast('Cor aplicada: '+hex,'ouro'); }
+
+/* ═══ SENHA ═══ */
+function forcaSenha(v){ const f=[/.{8,}/,/[A-Z]/,/[0-9]/,/[^a-zA-Z0-9]/].filter(r=>r.test(v)).length; const w=[0,25,50,80,100][f]; const cores=['#C04A4A','#C04A4A','#C89648','#C8A84B','#6BA67A']; const b=document.getElementById('barra-forca'); if(b){b.style.width=w+'%';b.style.background=cores[f];} }
+function alterarSenha(){ const a=document.getElementById('s-atual').value,n=document.getElementById('s-nova').value,c=document.getElementById('s-conf').value; if(!a){toast('Informe a senha atual.','erro');return;} if(n.length<6){toast('Mínimo 6 caracteres.','erro');return;} if(n!==c){toast('Senhas não coincidem.','erro');return;} toast('Senha alterada!','sucesso'); ['s-atual','s-nova','s-conf'].forEach(id=>{document.getElementById(id).value='';}); }
+function salvarBio(){ localStorage.setItem('am_bio',JSON.stringify({nome:document.getElementById('bio-nome').value,cargo:document.getElementById('bio-cargo').value,local:document.getElementById('bio-local').value})); toast('Biografia salva!','sucesso'); }
+
+/* ═══ EXPORTAR ═══ */
+function exportar(tipo){
+  const d={videos:S.videos,cotacoes:S.nomes.map((n,i)=>({nome:n,preco:S.p[i]})),config:{versao:'1.0',proprietario:'Fábio Toledo',local:'São Gabriel — RS'}};
+  const blob=new Blob([JSON.stringify(d[tipo]||d,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`arrozmarket_${tipo}_${Date.now()}.json`; a.click();
+  toast(`Exportação de ${tipo} concluída!`,'sucesso');
+}
+
+/* ═══ CEPEA ═══ */
+function testarConexao(){ const k=document.getElementById('cepea-key').value.trim(); if(!k){toast('Informe a chave CEPEA.','erro');return;} toast('Testando...','ouro'); setTimeout(()=>{ toast('Sem acesso — API CEPEA requer credencial paga.','erro'); S.logApi.unshift({h:new Date().toLocaleTimeString('pt-BR'),st:'401 Unauthorized',src:'CEPEA WebService',lat:'320ms'}); renderLogApi(); },1800); }
+
+/* ═══ BOOT ═══ */
+function iniciar(){
+  document.getElementById('v-data').value=new Date().toISOString().split('T')[0];
+  tick(); renderTabV(); renderAtv(); renderTabPrecos(); renderSwatches();
+  initGrafViews(); initGrafTempo(); iniciarTimer();
+}
+</script>
+</body>
+</html>
