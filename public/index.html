@@ -108,10 +108,12 @@ body {
   border-radius: 8px; min-width: 224px;
   z-index: 500;
   box-shadow: 0 12px 40px rgba(0,0,0,.6);
-  overflow: hidden;
+  /* overflow:hidden REMOVIDO — cortava o menu ao abrir */
+}
+#menuPerfil.aberto {
+  display: block;
   animation: dropDown .2s cubic-bezier(.22,1,.36,1);
 }
-#menuPerfil.aberto { display: block; }
 @keyframes dropDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
 
 .mp-cab {
@@ -732,7 +734,7 @@ footer strong { color: var(--gold); }
       <span style="font-size:.75rem;color:var(--muted)" id="tsAtt">—</span>
     </div>
     <table class="tab">
-      <thead><tr><th>Classificação</th><th>Tipo</th><th>Preço (R$/sc 60 kg)</th><th>Variação Dia</th><th>Tendência</th></tr></thead>
+      <thead><tr><th>Classificação</th><th>Unidade</th><th>Preço</th><th>Variação Dia</th><th>Tendência</th><th>Fonte</th></tr></thead>
       <tbody id="tbCot"></tbody>
     </table>
   </div>
@@ -1042,8 +1044,17 @@ async function carregarCotacoes() {
   if (!S.cots || S.cots.length === 0) S.cots = COTS_LOCAL;
   renderTicker();
   renderTabCot();
+  atualizarGrafBarra();
   const elTs = document.getElementById('tsAtt');
   if (elTs) elTs.textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+}
+
+/* Atualiza gráfico de barras com dados reais da API */
+function atualizarGrafBarra() {
+  if (!S.G.barra || !S.cots.length) return;
+  S.G.barra.data.labels   = S.cots.map(c => c.nome);
+  S.G.barra.data.datasets[0].data = S.cots.map(c => c.preco);
+  S.G.barra.update('none');
 }
 
 function renderTicker() {
@@ -1057,16 +1068,17 @@ function renderTicker() {
 function renderTabCot() {
   const tend = { alta:'↑ Alta', baixa:'↓ Baixa', estavel:'→ Estável' };
   const cor  = { alta:'var(--green2)', baixa:'var(--red)', estavel:'var(--gold)' };
-  const tipo = { cas:'Natural',mf_rs:'Casca',agl:'Tipo 1',lf:'Longo Fino',ben:'Benef. T1',parb:'Parboil.',int:'Integral',cat:'Cateto',qui:'Subprod.' };
   const tb = document.getElementById('tbCot');
   if (!tb) return;
+  /* Usa c.nome e c.unidade diretamente da API — mesmos nomes do ticker */
   tb.innerHTML = S.cots.map(c => `
     <tr>
       <td>${c.nome}</td>
-      <td><span class="t-badge">${tipo[c.id] || '—'}</span></td>
+      <td><span class="t-badge">${c.unidade || 'sc 60kg'}</span></td>
       <td><span class="p-tag">R$ ${c.preco.toFixed(2)}</span></td>
       <td><span class="bdg ${c.cls === 'alta' ? 'bdg-alta' : c.cls === 'baixa' ? 'bdg-baixa' : 'bdg-est'}">${c.variacao >= 0 ? '+' : ''}R$ ${Math.abs(c.variacao).toFixed(2)}</span></td>
       <td style="color:${cor[c.cls]}">${tend[c.cls]}</td>
+      <td style="font-size:.72rem;color:var(--muted)">${c.fonte || 'Notícias Agrícolas'}</td>
     </tr>`).join('');
 }
 
@@ -1331,15 +1343,21 @@ function initGraficos() {
   }
   S.G._s   = series;
   S.G.linha = new Chart(el('grafLinha').getContext('2d'), { type:'line', data:{ labels:meses, datasets:series('todos') }, options:{ ...base } });
+  /* Gráfico de barras: labels e dados vêm das cotações reais via API */
+  const barLabels = S.cots.length > 0 ? S.cots.map(c => c.nome) : ['Sem dados'];
+  const barData   = S.cots.length > 0 ? S.cots.map(c => c.preco) : [0];
+  const barColors = ['rgba(200,168,75,.75)','rgba(200,168,75,.52)','rgba(200,168,75,.35)',
+    'rgba(107,166,122,.75)','rgba(107,166,122,.9)','rgba(224,112,112,.6)',
+    'rgba(122,118,112,.45)','rgba(122,118,112,.28)','rgba(122,118,112,.2)'];
   S.G.barra = new Chart(el('grafBarra').getContext('2d'), {
     type: 'bar',
     data: {
-      labels: ['Long Grain T1','Long Grain T2','Agulhinha T1','Parboilizado T1','Integral T1','Cateto T1','Em Casca','Quirera'],
+      labels: barLabels,
       datasets: [{
-        label: 'R$/sc 60 kg',
-        data: [148.50,132.00,118.75,155.20,175.80,95.00,58.40,38.50],
-        backgroundColor: ['rgba(200,168,75,.75)','rgba(200,168,75,.52)','rgba(200,168,75,.35)','rgba(107,166,122,.75)','rgba(107,166,122,.9)','rgba(224,112,112,.6)','rgba(122,118,112,.45)','rgba(122,118,112,.28)'],
-        borderColor:     ['#C8A84B','#C8A84B','#C8A84B','#6BA67A','#6BA67A','#E07070','#7A7670','#7A7670'],
+        label: 'R$/sc',
+        data: barData,
+        backgroundColor: barLabels.map((_,i) => barColors[i % barColors.length]),
+        borderColor: barLabels.map((_,i) => barColors[i % barColors.length].replace('.75','1').replace('.52','1').replace('.35','1').replace('.9','1').replace('.6','1').replace('.45','1').replace('.28','1').replace('.2','1')),
         borderWidth: 1, borderRadius: 3,
       }]
     },
