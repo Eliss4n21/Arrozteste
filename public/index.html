@@ -33,6 +33,52 @@
 }
 
 /* ════════════════════════════════
+   TEMA CLARO (padrão)
+════════════════════════════════ */
+[data-tema="claro"] {
+  --dark:  #F5F5F0;
+  --dark2: #FFFFFF;
+  --dark3: #EEEEE8;
+  --dark4: #E2E2DC;
+  --cream: #1A1A18;
+  --muted: #6B6B65;
+  --text:  #2A2A26;
+  --green: #2D6B3E;
+  --green2:#3A8050;
+  --red:   #C0392B;
+  --gold-dim: rgba(200,168,75,.12);
+  --gold-b:   rgba(200,168,75,.25);
+}
+[data-tema="claro"] body { background: #F5F5F0; }
+[data-tema="claro"] #nav { background: rgba(245,245,240,.96); border-bottom-color: rgba(200,168,75,.2); }
+[data-tema="claro"] #ticker { background: #FFFFFF; border-bottom: 1px solid rgba(200,168,75,.15); }
+[data-tema="claro"] #menuPerfil { background: #FFFFFF; border-color: rgba(0,0,0,.1); box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+[data-tema="claro"] .mp-item:hover { background: #F5F5F0; }
+[data-tema="claro"] .mp-toggle:hover { background: #F5F5F0; }
+[data-tema="claro"] .toggle-pill { background: #E0E0DA; border-color: rgba(0,0,0,.15); }
+[data-tema="claro"] .toggle-pill::before { background: #9A9A94; }
+
+[data-tema="claro"] .card-v,
+[data-tema="claro"] .b-tab,
+[data-tema="claro"] .b-graf,
+[data-tema="claro"] .modal-inner,
+[data-tema="claro"] .modal-box { background: #FFFFFF; border-color: rgba(0,0,0,.09); }
+[data-tema="claro"] .v-area { background: #FFFFFF; border-color: rgba(0,0,0,.09); }
+[data-tema="claro"] footer { background: #EBEBЕ6; border-top-color: rgba(0,0,0,.08); }
+[data-tema="claro"] .form-input { background: #F5F5F0; border-color: rgba(0,0,0,.15); color: var(--cream); }
+[data-tema="claro"] .form-input:focus { border-color: var(--gold); background: #FFFFFF; }
+[data-tema="claro"] .btn-prim { background: var(--gold); color: #0b0b09; }
+[data-tema="claro"] #nav .nav-links a { color: var(--muted); }
+[data-tema="claro"] #nav .nav-links a:hover,
+[data-tema="claro"] #nav .nav-links a.ativo { color: var(--gold); }
+[data-tema="claro"] .fil-btn { border-color: rgba(0,0,0,.12); color: var(--muted); }
+[data-tema="claro"] .fil-btn.ativo { background: var(--gold); color: #0b0b09; border-color: var(--gold); }
+[data-tema="claro"] .t-badge { background: rgba(0,0,0,.06); color: var(--muted); }
+[data-tema="claro"] .p-tag { background: rgba(200,168,75,.12); }
+[data-tema="claro"] #avatarBtn { background: #EEEEE8; border-color: rgba(0,0,0,.12); }
+[data-tema="claro"] #avatarBtn svg { fill: var(--muted); }
+[data-tema="claro"] #avatarBtn:hover { border-color: var(--gold); }
+/* ════════════════════════════════
    RESET
 ════════════════════════════════ */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -137,6 +183,19 @@ body {
 }
 .mp-item:hover { background: var(--dark3); color: var(--cream); }
 .mp-item svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; pointer-events: none; }
+.mp-btn-entrar, .mp-btn-cadastro {
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+  width: 100%; padding: .58rem 1rem; border-radius: 6px;
+  font-size: .82rem; font-weight: 600; cursor: pointer;
+  border: none; font-family: inherit; transition: all .2s; margin-bottom: .4rem;
+}
+.mp-btn-entrar  { background: var(--gold); color: #0b0b09; }
+.mp-btn-entrar:hover  { filter: brightness(1.08); }
+.mp-btn-cadastro { background: transparent; color: var(--muted);
+  border: 1px solid rgba(200,168,75,.25); }
+.mp-btn-cadastro:hover { background: rgba(200,168,75,.07); color: var(--cream); }
+.mp-btn-entrar svg, .mp-btn-cadastro svg { width: 14px; height: 14px; fill: currentColor; pointer-events: none; }
+.mp-grupo { padding: .25rem 0; }
 .mp-sep { height: 1px; background: rgba(200,168,75,.08); margin: .2rem 0; }
 .mp-item.ouro { color: var(--gold); }
 .mp-item.ouro:hover { background: rgba(200,168,75,.08); }
@@ -831,7 +890,7 @@ const POLS = {
 const S = {
   usuario:  JSON.parse(localStorage.getItem('am_u')   || 'null'),
   token:    localStorage.getItem('am_tok') || null,
-  tema:     localStorage.getItem('am_tema') || 'escuro',
+  tema:     localStorage.getItem('am_tema') || 'claro',
   cor:      localStorage.getItem('am_cor')  || '#C8A84B',
   G:        {},          /* gráficos Chart.js */
   vids:     [],          /* lista de vídeos   */
@@ -883,6 +942,7 @@ async function apiFetch(method, path, body) {
 /* ═══ INICIALIZAÇÃO ═══ */
 (function boot() {
   try { aplicarCor(S.cor, false); } catch(e) {}
+  try { aplicarTema(S.tema); }      catch(e) {}
   try { renderData(); }   catch(e) {}
   try { renderAvatar(); } catch(e) {}
   try { renderMenu(); }   catch(e) {}
@@ -963,14 +1023,18 @@ function renderMenu() {
 
   if (!u) {
     m.innerHTML = `
-      <div class="mp-cab">
-        <div class="mp-nome">Visitante</div>
-        <div class="mp-role guest">Não logado</div>
+      <div class="mp-cab" style="padding:.9rem 1.2rem .8rem;border-bottom:1px solid rgba(0,0,0,.07)">
+        <div style="font-size:.8rem;color:var(--muted);margin-bottom:.7rem">Faça login para acessar sua conta</div>
+        <button class="mp-btn-entrar" onclick="fecharMenu();abrirAuth('login')">
+          ${SVG.entr} Entrar na conta
+        </button>
+        <button class="mp-btn-cadastro" onclick="fecharMenu();abrirAuth('registro')">
+          ${SVG.user} Criar conta grátis
+        </button>
       </div>
-      <div class="mp-item ouro" onclick="abrirAuth('login')">${SVG.entr} Entrar na conta</div>
-      <div class="mp-item" onclick="abrirAuth('registro')">${SVG.user} Criar conta grátis</div>
-      <div class="mp-sep"></div>
-      ${togItem}`;
+      <div class="mp-grupo">
+        ${togItem}
+      </div>`;
   } else if (u.role === 'admin') {
     m.innerHTML = `
       <div class="mp-cab">
@@ -1015,9 +1079,11 @@ function aplicarTema(t) {
   document.documentElement.setAttribute('data-tema', t);
   S.tema = t;
   localStorage.setItem('am_tema', t);
+  localStorage.setItem('am_tema', t);
 }
 function alternarTema() {
   aplicarTema(S.tema === 'escuro' ? 'claro' : 'escuro');
+  try { renderMenu(); } catch(e) {}
   fecharMenu();
   renderMenu();
 }
