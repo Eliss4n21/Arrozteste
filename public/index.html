@@ -879,22 +879,31 @@ async function apiFetch(method, path, body) {
 }
 
 /* ═══ INICIALIZAÇÃO ═══ */
-function initListeners() {
-  document.addEventListener('click', fecharMenu);
-  const mp = document.getElementById('menuPerfil');
-  if (mp) mp.addEventListener('click', e => e.stopPropagation());
-}
-
 (function boot() {
-  aplicarCor(S.cor, false);
-  renderData();
-  renderAvatar();
-  renderMenu();
-  initListeners();
-  carregarCotacoes();
-  carregarVideos();
-  renderLikeDest();
-  setInterval(carregarCotacoes, 30000); /* atualiza cotações a cada 30s */
+  try { aplicarCor(S.cor, false); } catch(e) {}
+  try { renderData(); }   catch(e) {}
+  try { renderAvatar(); } catch(e) {}
+  try { renderMenu(); }   catch(e) {}
+
+  // Listeners de clique — menu fecha ao clicar fora
+  document.addEventListener('click', function(e) {
+    const btn  = document.getElementById('avatarBtn');
+    const menu = document.getElementById('menuPerfil');
+    if (!menu) return;
+    if (btn && btn.contains(e.target)) return; // clique no botão → toggleMenu cuida
+    menu.classList.remove('aberto');
+  });
+  const mp = document.getElementById('menuPerfil');
+  if (mp) mp.addEventListener('click', function(e) { e.stopPropagation(); });
+
+  setTimeout(function() {
+    try { carregarCotacoes(); } catch(e) { try { renderTicker(); renderTabCot(); } catch(_){} }
+    try { carregarVideos(); }   catch(e) {}
+    try { renderLikeDest(); }   catch(e) {}
+  }, 150);
+  setInterval(function() {
+    try { carregarCotacoes(); } catch(e) {}
+  }, 30000);
 })();
 
 /* ═══ DATA ═══ */
@@ -989,12 +998,15 @@ function renderMenu() {
 
 function toggleMenu(e) {
   e.stopPropagation();
-  document.getElementById('menuPerfil').classList.toggle('aberto');
+  e.preventDefault();
+  const menu = document.getElementById('menuPerfil');
+  if (!menu) return;
+  menu.classList.toggle('aberto');
 }
 function fecharMenu() {
-  document.getElementById('menuPerfil').classList.remove('aberto');
+  const menu = document.getElementById('menuPerfil');
+  if (menu) menu.classList.remove('aberto');
 }
-/* listeners movidos para initListeners() — chamado no boot */
 
 /* ═══ TEMA ═══ */
 function aplicarTema(t) {
@@ -1020,14 +1032,18 @@ function aplicarCor(hex, salvar = true) {
 /* ═══ COTAÇÕES ═══ */
 async function carregarCotacoes() {
   try {
-    S.cots = await apiFetch('GET', '/cotacoes');
-  } catch {
+    const dados = await apiFetch('GET', '/cotacoes');
+    if (Array.isArray(dados) && dados.length > 0) S.cots = dados;
+    else S.cots = COTS_LOCAL;
+  } catch(e) {
+    console.warn('[ArrozMarket] API indisponível, usando fallback local:', e.message);
     S.cots = COTS_LOCAL;
   }
+  if (!S.cots || S.cots.length === 0) S.cots = COTS_LOCAL;
   renderTicker();
   renderTabCot();
-  const el = document.getElementById('tsAtt');
-  if (el) el.textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+  const elTs = document.getElementById('tsAtt');
+  if (elTs) elTs.textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
 }
 
 function renderTicker() {
