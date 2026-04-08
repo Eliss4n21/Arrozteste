@@ -843,14 +843,15 @@ const S = {
 
 /* ═══ DADOS LOCAIS DE FALLBACK ═══ */
 const COTS_LOCAL = [
-  {id:'t1',  nome:'Long Grain T1',   preco:148.50, variacao:+1.20, cls:'alta'   },
-  {id:'t2',  nome:'Long Grain T2',   preco:132.00, variacao:+0.80, cls:'alta'   },
-  {id:'agl', nome:'Agulhinha T1',    preco:118.75, variacao: 0.00, cls:'estavel'},
-  {id:'parb',nome:'Parboilizado T1', preco:155.20, variacao:+2.40, cls:'alta'   },
-  {id:'int', nome:'Integral T1',     preco:175.80, variacao:+3.10, cls:'alta'   },
-  {id:'cat', nome:'Cateto T1',       preco: 95.00, variacao:-0.50, cls:'baixa'  },
-  {id:'cas', nome:'Em Casca',        preco: 58.40, variacao: 0.00, cls:'estavel'},
-  {id:'qui', nome:'Quirera',         preco: 38.50, variacao:-0.30, cls:'baixa'  },
+  {id:'cas',   nome:'Em Casca (ESALQ/Senar-RS)',   preco: 65.00, variacao: 0.00, cls:'estavel', unidade:'sc 50kg'},
+  {id:'mf_rs', nome:'Mercado Fisico - Media RS',   preco: 62.00, variacao: 0.00, cls:'estavel', unidade:'sc 50kg'},
+  {id:'agl',   nome:'Agulhinha Irrigado (RS)',      preco: 48.00, variacao: 0.00, cls:'estavel', unidade:'sc 50kg'},
+  {id:'lf',    nome:'Longo Fino (MT)',              preco: 60.00, variacao: 0.00, cls:'estavel', unidade:'sc 60kg'},
+  {id:'ben',   nome:'Beneficiado Tipo 1 (SP)',      preco:118.00, variacao:-6.35, cls:'baixa',   unidade:'sc 60kg'},
+  {id:'parb',  nome:'Parboilizado T1',              preco:155.20, variacao:+2.40, cls:'alta',    unidade:'sc 60kg'},
+  {id:'int',   nome:'Integral T1',                  preco:175.80, variacao:+3.10, cls:'alta',    unidade:'sc 60kg'},
+  {id:'cat',   nome:'Cateto T1',                    preco: 95.00, variacao:-0.50, cls:'baixa',   unidade:'sc 60kg'},
+  {id:'qui',   nome:'Quirera',                      preco: 38.50, variacao:-0.30, cls:'baixa',   unidade:'sc 60kg'},
 ];
 const VIDS_LOCAL = [
   {id:1,titulo:'Impacto do clima na safra do RS',       data:'03/04/2025',dur:'09:32',views:2100,likes:87},
@@ -878,11 +879,18 @@ async function apiFetch(method, path, body) {
 }
 
 /* ═══ INICIALIZAÇÃO ═══ */
+function initListeners() {
+  document.addEventListener('click', fecharMenu);
+  const mp = document.getElementById('menuPerfil');
+  if (mp) mp.addEventListener('click', e => e.stopPropagation());
+}
+
 (function boot() {
   aplicarCor(S.cor, false);
   renderData();
   renderAvatar();
   renderMenu();
+  initListeners();
   carregarCotacoes();
   carregarVideos();
   renderLikeDest();
@@ -986,8 +994,7 @@ function toggleMenu(e) {
 function fecharMenu() {
   document.getElementById('menuPerfil').classList.remove('aberto');
 }
-document.addEventListener('click', fecharMenu);
-document.getElementById('menuPerfil').addEventListener('click', e => e.stopPropagation());
+/* listeners movidos para initListeners() — chamado no boot */
 
 /* ═══ TEMA ═══ */
 function aplicarTema(t) {
@@ -1034,7 +1041,7 @@ function renderTicker() {
 function renderTabCot() {
   const tend = { alta:'↑ Alta', baixa:'↓ Baixa', estavel:'→ Estável' };
   const cor  = { alta:'var(--green2)', baixa:'var(--red)', estavel:'var(--gold)' };
-  const tipo = { t1:'Tipo 1',t2:'Tipo 2',agl:'Tipo 1',parb:'Tipo 1',int:'Tipo 1',cat:'Tipo 1',cas:'Natural',qui:'Subprod.' };
+  const tipo = { cas:'Natural',mf_rs:'Casca',agl:'Tipo 1',lf:'Longo Fino',ben:'Benef. T1',parb:'Parboil.',int:'Integral',cat:'Cateto',qui:'Subprod.' };
   const tb = document.getElementById('tbCot');
   if (!tb) return;
   tb.innerHTML = S.cots.map(c => `
