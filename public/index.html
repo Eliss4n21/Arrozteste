@@ -103,6 +103,7 @@ body {
   background: rgba(11,11,9,.96);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(200,168,75,.14);
+  overflow: visible; /* garante que o dropdown não é cortado */
 }
 .logo {
   font-family: 'Playfair Display', serif;
@@ -138,7 +139,8 @@ body {
   font-family: 'Playfair Display', serif;
   font-size: .85rem; font-weight: 700; color: var(--gold);
   flex-shrink: 0; user-select: none;
-  /* SEM overflow:hidden — o overflow cortava o tooltip */
+  position: relative; /* stacking context próprio */
+  pointer-events: all; /* garante que cliques são capturados */
 }
 #avatarBtn:hover { border-color: var(--gold); transform: scale(1.06); }
 #avatarBtn svg { width: 19px; height: 19px; fill: var(--muted); transition: fill .25s; pointer-events: none; }
@@ -587,8 +589,6 @@ footer strong { color: var(--gold); }
     </div>
   </div>
 </nav>
-
-<!-- ════ DROPDOWN PERFIL ════ -->
 <div id="menuPerfil"><!-- injetado por JS --></div>
 
 <!-- ════ TICKER ════ -->
@@ -915,16 +915,20 @@ async function apiFetch(method, path, body) {
   try { renderAvatar(); } catch(e) {}
   try { renderMenu(); }   catch(e) {}
 
-  // Listeners de clique — menu fecha ao clicar fora
+  // Pre-popula o menu para garantir que o innerHTML não é vazio
+  // quando o usuário clicar pelo primeira vez
+  setTimeout(function() { try { renderMenu(); } catch(e) {} }, 50);
+
+  // Fecha o menu ao clicar em qualquer lugar fora dele
   document.addEventListener('click', function(e) {
-    const btn  = document.getElementById('avatarBtn');
+    if (_menuAbrindoAgora) return;
     const menu = document.getElementById('menuPerfil');
-    if (!menu) return;
-    if (btn && btn.contains(e.target)) return; // clique no botão → toggleMenu cuida
-    menu.classList.remove('aberto');
+    if (!menu || !menu.classList.contains('aberto')) return;
+    const btn = document.getElementById('avatarBtn');
+    const dentroMenu = menu.contains(e.target);
+    const dentroBtn  = btn && btn.contains(e.target);
+    if (!dentroMenu && !dentroBtn) menu.classList.remove('aberto');
   });
-  const mp = document.getElementById('menuPerfil');
-  if (mp) mp.addEventListener('click', function(e) { e.stopPropagation(); });
 
   setTimeout(function() {
     try { carregarCotacoes(); } catch(e) { try { renderTicker(); renderTabCot(); } catch(_){} }
@@ -1031,12 +1035,23 @@ function renderMenu() {
   }
 }
 
+/* ─ controle de menu ─ */
+let _menuAbrindoAgora = false;
+
 function toggleMenu(e) {
   e.stopPropagation();
   e.preventDefault();
   const menu = document.getElementById('menuPerfil');
   if (!menu) return;
-  menu.classList.toggle('aberto');
+  const estaAberto = menu.classList.contains('aberto');
+  if (estaAberto) {
+    menu.classList.remove('aberto');
+  } else {
+    _menuAbrindoAgora = true;
+    menu.classList.add('aberto');
+    // reseta a flag após o evento terminar de borbulhar
+    setTimeout(function(){ _menuAbrindoAgora = false; }, 0);
+  }
 }
 function fecharMenu() {
   const menu = document.getElementById('menuPerfil');
