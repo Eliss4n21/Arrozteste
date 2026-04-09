@@ -694,10 +694,10 @@ footer strong { color: var(--gold); }
       <div class="v-cab-t">Análise do Dia — <span style="color:var(--gold)" id="dataHoje"></span></div>
       <div class="badge-nova"><div class="tk-dot"></div>Nova edição disponível</div>
     </div>
-    <div class="v-area" onclick="abrirVideo({id:0,titulo:'Mercado do Arroz: Expectativas de Safra 2025',data:'Hoje',dur:'12:48',likes:1247})">
+    <div class="v-area" id="vAreaDest" onclick="abrirVideoDestaque()">
       <div class="v-fundo">
         <div class="btn-play"><div class="tri"></div></div>
-        <div class="v-titulo-t">Mercado do Arroz: Expectativas de Safra 2025 e Impactos nos Preços</div>
+        <div class="v-titulo-t" id="tituloDest">Carregando...</div>
         <div class="v-data-t" id="dataVid"></div>
       </div>
     </div>
@@ -711,11 +711,11 @@ footer strong { color: var(--gold); }
       </div>
       <div class="estats">
         <div class="estat">
-          <div class="estat-n">12:48</div>
+          <div class="estat-n" id="durDest">--:--</div>
           <div class="estat-l">Duração</div>
         </div>
         <div class="estat">
-          <div class="estat-n" id="viewsDest">3,4 mil</div>
+          <div class="estat-n" id="viewsDest">--</div>
           <div class="estat-l">Visualizações</div>
         </div>
         <div class="estat">
@@ -864,6 +864,7 @@ const S = {
   vids:     [],          /* lista de vídeos   */
   cots:     [],          /* cotações          */
   mVidAtual: null,       /* vídeo aberto no modal */
+  vidDest:   null,       /* vídeo destaque (primeiro da API) */
   curtidos: JSON.parse(localStorage.getItem('am_cur') || '{}'),
   /* likes do destaque (vídeo 0) */
   likesDest: parseInt(localStorage.getItem('am_ld') || '1247'),
@@ -1181,6 +1182,30 @@ async function carregarVideos() {
     S.vids = VIDS_LOCAL;
   }
   renderVideos();
+  renderDestaque();
+}
+
+function renderDestaque() {
+  /* Usa o primeiro vídeo publicado como destaque */
+  const dest = S.vids.find(v => v.status === 'pub' || !v.status) || S.vids[0];
+  if (!dest) return;
+  S.vidDest = dest;
+
+  const tEl = document.getElementById('tituloDest');
+  const dEl = document.getElementById('durDest');
+  const vEl = document.getElementById('viewsDest');
+  if (tEl) tEl.textContent = dest.titulo;
+  if (dEl) dEl.textContent = dest.dur || '--:--';
+  if (vEl) vEl.textContent = fmtN(dest.views || 0);
+
+  /* atualiza o like do destaque com o do vídeo real */
+  S.likesDest = dest.likes || 0;
+  renderLikeDest();
+}
+
+function abrirVideoDestaque() {
+  const v = S.vidDest || (S.vids && S.vids[0]);
+  if (v) abrirVideo(v);
 }
 
 function fmtN(n) {
