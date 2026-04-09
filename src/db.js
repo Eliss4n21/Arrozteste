@@ -13,7 +13,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 /* ── Senha hash de "admin123" gerada com bcrypt salt=10 ── */
-const ADMIN_HASH = '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+const ADMIN_HASH = '$2a$10$wN2sY2K7DoZcMX.3k/aBAO6BkfcjmC4bg3C8Ofsg0S7XBsRLkdbni'; /* hash de 'admin123' */
 
 const DEFAULT = {
   usuarios: [
