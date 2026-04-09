@@ -832,7 +832,7 @@ function renderTabPrecos(){
     cots.map((c,i)=>`<tr>
       <td style="color:var(--cream)">${c.nome}</td>
       <td><input type="number" id="pr-${i}" value="${c.preco.toFixed(2)}" step="0.01" min="0" style="width:110px;background:var(--dark3);border:1px solid rgba(200,168,75,.2);color:var(--cream);padding:.35rem .6rem;border-radius:var(--r);font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif" oninput="prevVar(${i},this.value,${c.preco})"></td>
-      <td id="pv-${i}" style="font-size:.8rem;color:${c.cls==='alta'?'var(--green2)':c.cls==='baixa'?'#E07070':'var(--gold)'">${c.variacao>=0?'+':''}${c.variacao.toFixed(2)}</td>
+      <td id="pv-${i}" style="font-size:.8rem;color:${c.cls==='alta'?'var(--green2)':c.cls==='baixa'?'#E07070':'var(--gold)'}">${c.variacao>=0?'+':''}${c.variacao.toFixed(2)}</td>
       <td style="color:var(--muted);font-size:.75rem">${c.unidade||'sc 60kg'}</td>
     </tr>`).join('')+'</tbody>';
 }
