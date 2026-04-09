@@ -155,11 +155,13 @@ body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;f
   <div class="login-box">
     <div class="login-logo">Arroz<span>Market</span></div>
     <div class="login-sub">Painel Administrativo</div>
-    <div class="form-grupo"><label>Usuário</label><input type="text" id="loginUser" value="fabio.toledo"></div>
-    <div class="form-grupo"><label>Senha</label><input type="password" id="loginPass" value="admin123"></div>
-    <button class="btn-login" onclick="fazerLogin()">Entrar no Painel</button>
-    <div class="login-erro" id="loginErro">Usuário ou senha incorretos.</div>
-    <div style="font-size:.72rem;color:var(--muted);margin-top:1.2rem">Demo: <strong style="color:var(--gold)">fabio.toledo</strong> / <strong style="color:var(--gold)">admin123</strong></div>
+    <div class="form-grupo"><label>E-mail</label><input type="email" id="loginUser" placeholder="admin@arrozmarket.com.br" autocomplete="username"></div>
+    <div class="form-grupo"><label>Senha</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-login" id="btnLogin" onclick="fazerLogin()">Entrar no Painel</button>
+    <div class="login-erro" id="loginErro" style="display:none"></div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:1.2rem">
+      Acesso: <strong style="color:var(--gold)">admin@arrozmarket.com.br</strong> / <strong style="color:var(--gold)">admin123</strong>
+    </div>
   </div>
 </div>
 
@@ -605,23 +607,7 @@ async function apiAdm(method, path, body) {
   return j;
 }
 
-/* Login na API para obter token admin */
-async function loginApi() {
-  try {
-    const r = await fetch(API_ADMIN + '/auth/login', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({email:'fabio@arrozmarket.com.br', senha:'admin123'})
-    });
-    if (r.ok) {
-      const j = await r.json();
-      adminToken = j.token;
-      localStorage.setItem('am_admin_tok', adminToken);
-    }
-  } catch(e) { console.warn('[Admin] login API:', e.message); }
-}
-
-'use strict';
+/* loginApi() removida — autenticação feita pelo fazerLogin() */
 
 /* ═══ ESTADO ═══ */
 const S = {
@@ -656,27 +642,59 @@ S.p = new Float32Array(S.pBase);
 
 /* ═══ LOGIN ═══ */
 async function fazerLogin(){
-  const email = document.getElementById('loginUser').value.trim();
-  const senha = document.getElementById('loginPass').value;
+  const email  = (document.getElementById('loginUser').value || '').trim();
+  const senha  = (document.getElementById('loginPass').value || '');
   const erroEl = document.getElementById('loginErro');
+  const btnEl  = document.getElementById('btnLogin');
+
   erroEl.style.display = 'none';
-  if (!email || !senha) { erroEl.textContent='Preencha e-mail e senha.'; erroEl.style.display='block'; return; }
+  erroEl.textContent   = '';
+
+  if (!email || !senha) {
+    erroEl.textContent  = 'Preencha e-mail e senha.';
+    erroEl.style.display = 'block';
+    return;
+  }
+
+  if (btnEl) { btnEl.textContent = 'Aguarde...'; btnEl.disabled = true; }
+
   try {
     const r = await fetch(API_ADMIN + '/auth/login', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({email, senha})
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({ email, senha })
     });
-    const j = await r.json();
-    if (!r.ok) { erroEl.textContent = j.erro || 'Credenciais inválidas.'; erroEl.style.display='block'; return; }
-    if (j.usuario?.role !== 'admin') { erroEl.textContent='Acesso restrito a administradores.'; erroEl.style.display='block'; return; }
+
+    let j = {};
+    try { j = await r.json(); } catch(e) {}
+
+    if (!r.ok) {
+      erroEl.textContent   = j.erro || 'E-mail ou senha incorretos.';
+      erroEl.style.display = 'block';
+      if (btnEl) { btnEl.textContent = 'Entrar no Painel'; btnEl.disabled = false; }
+      return;
+    }
+
+    if (!j.usuario || j.usuario.role !== 'admin') {
+      erroEl.textContent   = 'Acesso restrito a administradores.';
+      erroEl.style.display = 'block';
+      if (btnEl) { btnEl.textContent = 'Entrar no Painel'; btnEl.disabled = false; }
+      return;
+    }
+
     adminToken = j.token;
     localStorage.setItem('am_admin_tok', adminToken);
-    document.getElementById('login-screen').style.display='none';
-    const w=document.getElementById('app-wrap'); w.style.opacity='1'; w.style.pointerEvents='auto';
+
+    document.getElementById('login-screen').style.display = 'none';
+    const w = document.getElementById('app-wrap');
+    w.style.opacity      = '1';
+    w.style.pointerEvents = 'auto';
     iniciar();
+
   } catch(e) {
-    erroEl.textContent = 'Erro de conexão com o servidor.';
+    erroEl.textContent   = 'Erro de conexão: ' + e.message;
     erroEl.style.display = 'block';
+    if (btnEl) { btnEl.textContent = 'Entrar no Painel'; btnEl.disabled = false; }
   }
 }
 document.getElementById('loginPass').addEventListener('keydown',e=>{ if(e.key==='Enter') fazerLogin(); });
