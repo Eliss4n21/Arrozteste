@@ -788,8 +788,9 @@ function filtrarV(q){ renderTabV(S.videos.filter(v=>v.titulo.toLowerCase().inclu
 function excluirV(id){ if(!confirm('Excluir este vídeo?')) return; S.videos=S.videos.filter(v=>v.id!==id); salvarV(); renderTabV(); toast('Vídeo excluído.','ouro'); }
 function editarV(id){
   const v=S.videos.find(v=>v.id===id); if(!v) return;
+  const tituloSafe = v.titulo.replace(/"/g,'&quot;');
   abrirModal(`Editar — ${v.titulo}`,`
-    <div class="form-grupo"><label>Título</label><input type="text" id="e-titulo" value="${v.titulo.replace(/"/g,'&quot;')}"></div>
+    <div class="form-grupo"><label>Título</label><input type="text" id="e-titulo" value="${tituloSafe}"></div>
     <div class="form-grupo"><label>Categoria</label><select id="e-cat">${['Análise Diária','Cotações','Técnico','Entrevista','Especial'].map(c=>`<option ${c===v.cat?'selected':''}>${c}</option>`).join('')}</select></div>
     <div class="form-grupo"><label>Status</label><select id="e-status"><option value="pub" ${v.status==='pub'?'selected':''}>Publicado</option><option value="rascunho" ${v.status==='rascunho'?'selected':''}>Rascunho</option><option value="agendado" ${v.status==='agendado'?'selected':''}>Agendado</option></select></div>
     <div style="display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem"><button class="btn btn-sec" onclick="fecharModal()">Cancelar</button><button class="btn btn-prim" onclick="salvarEdit(${id})">💾 Salvar</button></div>`);
