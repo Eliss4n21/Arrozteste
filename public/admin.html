@@ -192,7 +192,7 @@ body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;f
       <div class="sb-item" onclick="mostrar('p-sheets',this)"><span class="sb-icon">📊</span>Google Sheets</div>
       <div class="sb-section">Site</div>
       <div class="sb-item" onclick="mostrar('p-especialista',this)"><span class="sb-icon">🧑‍🌾</span>Página Especialista</div>
-      <div class="sb-item" onclick="mostrar('p-bio',this)"><span class="sb-icon">👤</span>Minha Biografia</div>
+      <!-- p-bio removido — use Página Especialista -->
       <div class="sb-item" onclick="mostrar('p-aparencia',this)"><span class="sb-icon">🎨</span>Aparência</div>
       <div class="sb-section">Acesso</div>
       <div class="sb-item" onclick="mostrar('p-usuarios',this)"><span class="sb-icon">👥</span>Usuários & Cargos</div>
@@ -874,13 +874,8 @@ function aplicarCor(hex,i){ S.swatchAtivo=i; document.documentElement.style.setP
 function forcaSenha(v){ const f=[/.{8,}/,/[A-Z]/,/[0-9]/,/[^a-zA-Z0-9]/].filter(r=>r.test(v)).length; const w=[0,25,50,80,100][f]; const cores=['#C04A4A','#C04A4A','#C89648','#C8A84B','#6BA67A']; const b=document.getElementById('barra-forca'); if(b){b.style.width=w+'%';b.style.background=cores[f];} }
 function alterarSenha(){ const a=document.getElementById('s-atual').value,n=document.getElementById('s-nova').value,c=document.getElementById('s-conf').value; if(!a){toast('Informe a senha atual.','erro');return;} if(n.length<6){toast('Mínimo 6 caracteres.','erro');return;} if(n!==c){toast('Senhas não coincidem.','erro');return;} toast('Senha alterada!','sucesso'); ['s-atual','s-nova','s-conf'].forEach(id=>{document.getElementById(id).value='';}); }
 function salvarBio(){
-  const esp = JSON.parse(localStorage.getItem('am_esp') || '{}');
-  esp.nome  = document.getElementById('bio-nome')?.value || esp.nome;
-  esp.cargo = document.getElementById('bio-cargo')?.value || esp.cargo;
-  esp.local = document.getElementById('bio-local')?.value || esp.local;
-  localStorage.setItem('am_esp', JSON.stringify(esp));
-  localStorage.setItem('am_bio', JSON.stringify({nome:esp.nome,cargo:esp.cargo,local:esp.local}));
-  toast('Biografia salva!','sucesso');
+  // Redireciona para salvarEspecialista para evitar sobrescrever dados parciais
+  salvarEspecialista();
 }
 
 /* ═══ EXPORTAR ═══ */
@@ -1045,25 +1040,31 @@ function addItemTimeline(){
 }
 function remItemTimeline(i){ _tlData.splice(i,1); renderTimelineForm(_tlData); }
 function salvarEspecialista(){
+  // Helper: lê campo com fallback para valor atual salvo
+  const existing = JSON.parse(localStorage.getItem('am_esp') || '{}');
+  const g = (id, fallback) => {
+    const el = document.getElementById(id);
+    return (el && el.value !== undefined) ? el.value : (existing[fallback] || '');
+  };
   const esp = {
-    iniciais: document.getElementById('esp-iniciais').value,
-    nome:  document.getElementById('esp-nome').value,
-    cargo: document.getElementById('esp-cargo').value,
-    local: document.getElementById('esp-local').value,
-    frase: document.getElementById('esp-frase').value,
-    p1:    document.getElementById('esp-p1').value,
-    p2:    document.getElementById('esp-p2').value,
-    stat1n:document.getElementById('esp-s1n').value, stat1l:document.getElementById('esp-s1l').value,
-    stat2n:document.getElementById('esp-s2n').value, stat2l:document.getElementById('esp-s2l').value,
-    stat3n:document.getElementById('esp-s3n').value, stat3l:document.getElementById('esp-s3l').value,
-    stat4n:document.getElementById('esp-s4n').value, stat4l:document.getElementById('esp-s4l').value,
-    yt: document.getElementById('esp-yt').value,
-    li: document.getElementById('esp-li').value,
-    ig: document.getElementById('esp-ig').value,
-    timeline: _tlData,
+    iniciais: g('esp-iniciais','iniciais') || 'FT',
+    nome:     g('esp-nome','nome')         || 'Fábio Toledo',
+    cargo:    g('esp-cargo','cargo')       || 'Especialista em Mercado Orizícola',
+    local:    g('esp-local','local')       || 'São Gabriel — RS',
+    frase:    g('esp-frase','frase')       || '"O arroz gaúcho não é apenas um grão — é identidade, tecnologia e mercado."',
+    p1:       g('esp-p1','p1')             || existing.p1 || '',
+    p2:       g('esp-p2','p2')             || existing.p2 || '',
+    stat1n:   g('esp-s1n','stat1n') || '22',    stat1l: g('esp-s1l','stat1l') || 'Anos de mercado',
+    stat2n:   g('esp-s2n','stat2n') || '850+',  stat2l: g('esp-s2l','stat2l') || 'Análises publicadas',
+    stat3n:   g('esp-s3n','stat3n') || '340+',  stat3l: g('esp-s3l','stat3l') || 'Vídeos gravados',
+    stat4n:   g('esp-s4n','stat4n') || 'RS/SC', stat4l: g('esp-s4l','stat4l') || 'Abrangência',
+    yt: g('esp-yt','yt') || '',
+    li: g('esp-li','li') || '',
+    ig: g('esp-ig','ig') || '',
+    timeline: (_tlData && _tlData.length > 0) ? _tlData : (existing.timeline || []),
   };
   localStorage.setItem('am_esp', JSON.stringify(esp));
-  toast('✅ Página Especialista atualizada!','sucesso');
+  toast('✅ Página Especialista atualizada! Recarregue o site para ver.','sucesso');
 }
 
 /* ═══ USUÁRIOS ═══ */

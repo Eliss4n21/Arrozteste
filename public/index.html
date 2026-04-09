@@ -1512,46 +1512,46 @@ function apFiltro(f, btn) {
 
 /* ═══ ESPECIALISTA — carrega dados do localStorage ═══ */
 function getEsp() {
-  try { return JSON.parse(localStorage.getItem('am_esp') || 'null') || {
-  iniciais:"FT", nome:"Fábio Toledo", cargo:"Especialista em Mercado Orizícola",
-  local:"São Gabriel — RS", frase:'"O arroz gaúcho não é apenas um grão — é identidade, tecnologia e mercado."',
-  p1:"Natural de São Gabriel (RS), Fábio Toledo construiu sua trajetória inteiramente dentro do setor orizícola. Formado em Agronomia pela UFSM, com especialização em Mercados Agrícolas.",
-  p2:"Acumula mais de duas décadas de experiência em análise de preços, classificação de grãos e consultoria para cooperativas, beneficiadoras e tradings do Sul do Brasil.",
-  stat1n:"22",   stat1l:"Anos de mercado",
-  stat2n:"850+", stat2l:"Análises publicadas",
-  stat3n:"340+", stat3l:"Vídeos gravados",
-  stat4n:"RS/SC",stat4l:"Abrangência",
-  yt:"", li:"", ig:"",
-  timeline: [
-    {ano:"2002", titulo:"Graduação em Agronomia — UFSM", empresa:"Universidade Federal de Santa Maria", desc:"Ênfase em culturas irrigadas e lavouras orizícolas."},
-    {ano:"2003", titulo:"Analista de Mercado Júnior", empresa:"Cotrijal — Cooperativa Agropecuária e Industrial", desc:"Análise de preços e acompanhamento de safra."},
-    {ano:"2006", titulo:"Gerente de Classificação e Qualidade", empresa:"Camil Alimentos S.A.", desc:"Padronização de grãos para as linhas Premium e Tradicional."},
-    {ano:"2011", titulo:"Consultor de Mercado Sênior", empresa:"Josapar — Joaquim Oliveira S.A. Participações", desc:"Precificação e negociação de grandes lotes no RS e SC."},
-    {ano:"2016", titulo:"Especialista em Comercialização", empresa:"Cooperativa Languiru (Cotril)", desc:"Estratégias de venda e exportação."},
-    {ano:"2019", titulo:"Toledo Agro Consultoria", empresa:"Consultoria própria — São Gabriel, RS", desc:"Atendimento a beneficiadoras, cooperativas e investidores."},
-    {ano:"2025", titulo:"Lançamento da plataforma ArrozMarket", empresa:"Hub digital — São Gabriel, RS", desc:"Análises, cotações em tempo real e acervo de vídeos."}
-  ]
-}; }
-  catch(e) { return {
-  iniciais:"FT", nome:"Fábio Toledo", cargo:"Especialista em Mercado Orizícola",
-  local:"São Gabriel — RS", frase:'"O arroz gaúcho não é apenas um grão — é identidade, tecnologia e mercado."',
-  p1:"Natural de São Gabriel (RS), Fábio Toledo construiu sua trajetória inteiramente dentro do setor orizícola. Formado em Agronomia pela UFSM, com especialização em Mercados Agrícolas.",
-  p2:"Acumula mais de duas décadas de experiência em análise de preços, classificação de grãos e consultoria para cooperativas, beneficiadoras e tradings do Sul do Brasil.",
-  stat1n:"22",   stat1l:"Anos de mercado",
-  stat2n:"850+", stat2l:"Análises publicadas",
-  stat3n:"340+", stat3l:"Vídeos gravados",
-  stat4n:"RS/SC",stat4l:"Abrangência",
-  yt:"", li:"", ig:"",
-  timeline: [
-    {ano:"2002", titulo:"Graduação em Agronomia — UFSM", empresa:"Universidade Federal de Santa Maria", desc:"Ênfase em culturas irrigadas e lavouras orizícolas."},
-    {ano:"2003", titulo:"Analista de Mercado Júnior", empresa:"Cotrijal — Cooperativa Agropecuária e Industrial", desc:"Análise de preços e acompanhamento de safra."},
-    {ano:"2006", titulo:"Gerente de Classificação e Qualidade", empresa:"Camil Alimentos S.A.", desc:"Padronização de grãos para as linhas Premium e Tradicional."},
-    {ano:"2011", titulo:"Consultor de Mercado Sênior", empresa:"Josapar — Joaquim Oliveira S.A. Participações", desc:"Precificação e negociação de grandes lotes no RS e SC."},
-    {ano:"2016", titulo:"Especialista em Comercialização", empresa:"Cooperativa Languiru (Cotril)", desc:"Estratégias de venda e exportação."},
-    {ano:"2019", titulo:"Toledo Agro Consultoria", empresa:"Consultoria própria — São Gabriel, RS", desc:"Atendimento a beneficiadoras, cooperativas e investidores."},
-    {ano:"2025", titulo:"Lançamento da plataforma ArrozMarket", empresa:"Hub digital — São Gabriel, RS", desc:"Análises, cotações em tempo real e acervo de vídeos."}
-  ]
-}; }
+  const DEF = {
+    iniciais:"FT", nome:"Fábio Toledo", cargo:"Especialista em Mercado Orizícola",
+    local:"São Gabriel — RS",
+    frase:'"O arroz gaúcho não é apenas um grão — é identidade, tecnologia e mercado."',
+    p1:"Natural de São Gabriel (RS), Fábio Toledo construiu sua trajetória inteiramente dentro do setor orizícola. Formado em Agronomia pela UFSM, com especialização em Mercados Agrícolas.",
+    p2:"Acumula mais de duas décadas de experiência em análise de preços, classificação de grãos e consultoria para cooperativas, beneficiadoras e tradings do Sul do Brasil.",
+    stat1n:"22",   stat1l:"Anos de mercado",
+    stat2n:"850+", stat2l:"Análises publicadas",
+    stat3n:"340+", stat3l:"Vídeos gravados",
+    stat4n:"RS/SC",stat4l:"Abrangência",
+    yt:"", li:"", ig:"",
+    timeline:[
+      {ano:"2002",titulo:"Graduação em Agronomia — UFSM",empresa:"Universidade Federal de Santa Maria",desc:"Ênfase em culturas irrigadas e lavouras orizícolas."},
+      {ano:"2003",titulo:"Analista de Mercado Júnior",empresa:"Cotrijal — Cooperativa Agropecuária e Industrial",desc:"Análise de preços e acompanhamento de safra."},
+      {ano:"2006",titulo:"Gerente de Classificação e Qualidade",empresa:"Camil Alimentos S.A.",desc:"Padronização de grãos para as linhas Premium e Tradicional."},
+      {ano:"2011",titulo:"Consultor de Mercado Sênior",empresa:"Josapar — Joaquim Oliveira S.A. Participações",desc:"Precificação e negociação de grandes lotes no RS e SC."},
+      {ano:"2016",titulo:"Especialista em Comercialização",empresa:"Cooperativa Languiru (Cotril)",desc:"Estratégias de venda e exportação."},
+      {ano:"2019",titulo:"Toledo Agro Consultoria",empresa:"Consultoria própria — São Gabriel, RS",desc:"Atendimento a beneficiadoras, cooperativas e investidores."},
+      {ano:"2025",titulo:"Lançamento da plataforma ArrozMarket",empresa:"Hub digital — São Gabriel, RS",desc:"Análises, cotações em tempo real e acervo de vídeos."}
+    ]
+  };
+  try {
+    const raw = localStorage.getItem('am_esp');
+    if (!raw) return DEF;
+    const saved = JSON.parse(raw);
+    if (!saved || typeof saved !== 'object') return DEF;
+    // Merge: usa valor salvo se existir e não for undefined/null/""
+    // para campos de texto simples; para timeline usa o salvo se tiver itens
+    const merged = {};
+    for (const k of Object.keys(DEF)) {
+      if (k === 'timeline') {
+        merged.timeline = (saved.timeline && saved.timeline.length > 0)
+          ? saved.timeline : DEF.timeline;
+      } else {
+        merged[k] = (saved[k] !== undefined && saved[k] !== null && saved[k] !== '')
+          ? saved[k] : DEF[k];
+      }
+    }
+    return merged;
+  } catch(e) { return DEF; }
 }
 function renderEspecialista() {
   const e = getEsp();
