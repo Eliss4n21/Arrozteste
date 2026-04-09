@@ -152,7 +152,7 @@ body {
   background: var(--dark2);
   border: 1px solid var(--gold-b);
   border-radius: 8px; min-width: 224px;
-  z-index: 500;
+  z-index: 99999;
   box-shadow: 0 12px 40px rgba(0,0,0,.6);
   /* overflow:hidden REMOVIDO — cortava o menu ao abrir */
 }
@@ -805,44 +805,7 @@ footer strong { color: var(--gold); }
 </section>
 
 <!-- ESPECIALISTA -->
-<section class="pagina" id="especialista">
-  <div class="bio-grid">
-    <div>
-      <div class="bio-card">
-        <div class="bio-av">FT</div>
-        <div class="bio-nome">Fábio Toledo</div>
-        <div class="bio-cargo">Especialista em Mercado Orizícola</div>
-        <div class="bio-local">📍 São Gabriel — RS</div>
-        <div class="bio-stats">
-          <div class="bio-stat"><div class="bs-n">22</div><div class="bs-l">Anos de mercado</div></div>
-          <div class="bio-stat"><div class="bs-n">850+</div><div class="bs-l">Análises publicadas</div></div>
-          <div class="bio-stat"><div class="bs-n">340+</div><div class="bs-l">Vídeos gravados</div></div>
-          <div class="bio-stat"><div class="bs-n">RS/SC</div><div class="bs-l">Abrangência</div></div>
-        </div>
-        <div class="bio-redes">
-          <button class="btn-rede">YouTube</button>
-          <button class="btn-rede">LinkedIn</button>
-          <button class="btn-rede">Instagram</button>
-        </div>
-      </div>
-    </div>
-    <div class="bio-cont">
-      <div class="tag" style="margin-bottom:1rem">Quem é o especialista</div>
-      <h2>Fábio Toledo</h2>
-      <p class="dest">"O arroz gaúcho não é apenas um grão — é identidade, tecnologia e mercado."</p>
-      <p>Natural de São Gabriel (RS), Fábio Toledo construiu sua trajetória inteiramente dentro do setor orizícola. Formado em Agronomia pela UFSM, com especialização em Mercados Agrícolas.</p>
-      <p>Acumula mais de duas décadas de experiência em análise de preços, classificação de grãos e consultoria para cooperativas, beneficiadoras e tradings do Sul do Brasil.</p>
-      <div class="rotulo" style="margin-top:2rem;margin-bottom:1.4rem">Trajetória Profissional</div>
-      <div class="lt-item"><div class="lt-ano">2002</div><div class="lt-ponto"></div><div class="lt-txt"><h4>Graduação em Agronomia — UFSM</h4><div class="empresa">Universidade Federal de Santa Maria</div><p>Ênfase em culturas irrigadas e lavouras orizícolas.</p></div></div>
-      <div class="lt-item"><div class="lt-ano">2003</div><div class="lt-ponto"></div><div class="lt-txt"><h4>Analista de Mercado Júnior</h4><div class="empresa">Cotrijal — Cooperativa Agropecuária e Industrial</div><p>Análise de preços e acompanhamento de safra.</p></div></div>
-      <div class="lt-item"><div class="lt-ano">2006</div><div class="lt-ponto"></div><div class="lt-txt"><h4>Gerente de Classificação e Qualidade</h4><div class="empresa">Camil Alimentos S.A.</div><p>Padronização de grãos para as linhas Premium e Tradicional.</p></div></div>
-      <div class="lt-item"><div class="lt-ano">2011</div><div class="lt-ponto"></div><div class="lt-txt"><h4>Consultor de Mercado Sênior</h4><div class="empresa">Josapar — Joaquim Oliveira S.A. Participações</div><p>Precificação e negociação de grandes lotes no RS e SC.</p></div></div>
-      <div class="lt-item"><div class="lt-ano">2016</div><div class="lt-ponto"></div><div class="lt-txt"><h4>Especialista em Comercialização</h4><div class="empresa">Cooperativa Languiru (Cotril)</div><p>Estratégias de venda e exportação.</p></div></div>
-      <div class="lt-item"><div class="lt-ano">2019</div><div class="lt-ponto"></div><div class="lt-txt"><h4>Toledo Agro Consultoria</h4><div class="empresa">Consultoria própria — São Gabriel, RS</div><p>Atendimento a beneficiadoras, cooperativas e investidores.</p></div></div>
-      <div class="lt-item"><div class="lt-ano">2025</div><div class="lt-ponto"></div><div class="lt-txt"><h4>Lançamento da plataforma ArrozMarket</h4><div class="empresa">Hub digital — São Gabriel, RS</div><p>Análises, cotações em tempo real e acervo de vídeos.</p></div></div>
-    </div>
-  </div>
-</section>
+<section class="pagina" id="especialista"><div id="esp-render"></div></section>
 
 <footer>
   <strong>ArrozMarket</strong> &nbsp;·&nbsp; Análises diárias do mercado orizícola &nbsp;·&nbsp; © 2025 · Fábio Toledo · São Gabriel — RS
@@ -966,6 +929,7 @@ async function apiFetch(method, path, body) {
   setTimeout(function() {
     try { carregarCotacoes(); } catch(e) { try { renderTicker(); renderTabCot(); } catch(_){} }
     try { carregarVideos(); }   catch(e) {}
+    try { renderEspecialista(); } catch(e) {}
     try { renderLikeDest(); }   catch(e) {}
   }, 150);
   setInterval(function() {
@@ -1103,19 +1067,66 @@ function aplicarCor(hex, salvar = true) {
 }
 
 /* ═══ COTAÇÕES ═══ */
+/* ─── Google Sheets como fonte de cotações ───
+   Configure a URL da planilha pública no admin (Fonte de Cotações).
+   Formato esperado na planilha (aba Planilha1, cols A-E):
+     A: id  B: nome  C: preco  D: variacao  E: unidade
+   ─────────────────────────────────────────── */
+async function buscarSheetsCoT() {
+  const url = localStorage.getItem('am_sheets_url');
+  if (!url) return null;
+  // Converte URL de visualização para JSON export
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (!match) return null;
+  const id = match[1];
+  const jsonUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&sheet=Cotacoes`;
+  const r = await fetch(jsonUrl, {cache:'no-store'});
+  const txt = await r.text();
+  const json = JSON.parse(txt.replace(/^[^(]+\(|\);?$/g,''));
+  const rows = json.table.rows;
+  return rows.map(row => {
+    const c = row.c;
+    const preco = parseFloat((c[2]?.v || '0').toString().replace(',','.'));
+    const variacao = parseFloat((c[3]?.v || '0').toString().replace(',','.'));
+    return {
+      id:       (c[0]?.v || '').toString().trim(),
+      nome:     (c[1]?.v || '').toString().trim(),
+      preco:    isNaN(preco) ? 0 : preco,
+      variacao: isNaN(variacao) ? 0 : variacao,
+      unidade:  (c[4]?.v || 'sc 60kg').toString().trim(),
+      cls:      variacao > 0.01 ? 'alta' : variacao < -0.01 ? 'baixa' : 'estavel',
+      fonte:    'Google Sheets',
+      ts:       Date.now()
+    };
+  }).filter(c => c.id && c.preco > 0);
+}
+
 async function carregarCotacoes() {
+  // 1. Tenta Google Sheets (se configurado)
+  try {
+    const sheets = await buscarSheetsCoT();
+    if (sheets && sheets.length > 0) {
+      S.cots = sheets;
+      renderTicker(); renderTabCot();
+      try { atualizarGrafBarra(); } catch(e) {}
+      const el = document.getElementById('tsAtt');
+      if (el) el.textContent = 'Sheets • ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+      return;
+    }
+  } catch(e) { /* Sheets falhou, tenta API */ }
+
+  // 2. Tenta API do servidor
   try {
     const dados = await apiFetch('GET', '/cotacoes');
     if (Array.isArray(dados) && dados.length > 0) S.cots = dados;
     else S.cots = COTS_LOCAL;
   } catch(e) {
-    console.warn('[ArrozMarket] API indisponível, usando fallback local:', e.message);
     S.cots = COTS_LOCAL;
   }
   if (!S.cots || S.cots.length === 0) S.cots = COTS_LOCAL;
   renderTicker();
   renderTabCot();
-  atualizarGrafBarra();
+  try { atualizarGrafBarra(); } catch(e) {}
   const elTs = document.getElementById('tsAtt');
   if (elTs) elTs.textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
 }
@@ -1483,6 +1494,92 @@ function apFiltro(f, btn) {
   if (S.G.linha) { S.G.linha.data.datasets = S.G._s(f); S.G.linha.update('active'); }
 }
 
+
+/* ═══ ESPECIALISTA — carrega dados do localStorage ═══ */
+function getEsp() {
+  try { return JSON.parse(localStorage.getItem('am_esp') || 'null') || {
+  iniciais:"FT", nome:"Fábio Toledo", cargo:"Especialista em Mercado Orizícola",
+  local:"São Gabriel — RS", frase:'"O arroz gaúcho não é apenas um grão — é identidade, tecnologia e mercado."',
+  p1:"Natural de São Gabriel (RS), Fábio Toledo construiu sua trajetória inteiramente dentro do setor orizícola. Formado em Agronomia pela UFSM, com especialização em Mercados Agrícolas.",
+  p2:"Acumula mais de duas décadas de experiência em análise de preços, classificação de grãos e consultoria para cooperativas, beneficiadoras e tradings do Sul do Brasil.",
+  stat1n:"22",   stat1l:"Anos de mercado",
+  stat2n:"850+", stat2l:"Análises publicadas",
+  stat3n:"340+", stat3l:"Vídeos gravados",
+  stat4n:"RS/SC",stat4l:"Abrangência",
+  yt:"", li:"", ig:"",
+  timeline: [
+    {ano:"2002", titulo:"Graduação em Agronomia — UFSM", empresa:"Universidade Federal de Santa Maria", desc:"Ênfase em culturas irrigadas e lavouras orizícolas."},
+    {ano:"2003", titulo:"Analista de Mercado Júnior", empresa:"Cotrijal — Cooperativa Agropecuária e Industrial", desc:"Análise de preços e acompanhamento de safra."},
+    {ano:"2006", titulo:"Gerente de Classificação e Qualidade", empresa:"Camil Alimentos S.A.", desc:"Padronização de grãos para as linhas Premium e Tradicional."},
+    {ano:"2011", titulo:"Consultor de Mercado Sênior", empresa:"Josapar — Joaquim Oliveira S.A. Participações", desc:"Precificação e negociação de grandes lotes no RS e SC."},
+    {ano:"2016", titulo:"Especialista em Comercialização", empresa:"Cooperativa Languiru (Cotril)", desc:"Estratégias de venda e exportação."},
+    {ano:"2019", titulo:"Toledo Agro Consultoria", empresa:"Consultoria própria — São Gabriel, RS", desc:"Atendimento a beneficiadoras, cooperativas e investidores."},
+    {ano:"2025", titulo:"Lançamento da plataforma ArrozMarket", empresa:"Hub digital — São Gabriel, RS", desc:"Análises, cotações em tempo real e acervo de vídeos."}
+  ]
+}; }
+  catch(e) { return {
+  iniciais:"FT", nome:"Fábio Toledo", cargo:"Especialista em Mercado Orizícola",
+  local:"São Gabriel — RS", frase:'"O arroz gaúcho não é apenas um grão — é identidade, tecnologia e mercado."',
+  p1:"Natural de São Gabriel (RS), Fábio Toledo construiu sua trajetória inteiramente dentro do setor orizícola. Formado em Agronomia pela UFSM, com especialização em Mercados Agrícolas.",
+  p2:"Acumula mais de duas décadas de experiência em análise de preços, classificação de grãos e consultoria para cooperativas, beneficiadoras e tradings do Sul do Brasil.",
+  stat1n:"22",   stat1l:"Anos de mercado",
+  stat2n:"850+", stat2l:"Análises publicadas",
+  stat3n:"340+", stat3l:"Vídeos gravados",
+  stat4n:"RS/SC",stat4l:"Abrangência",
+  yt:"", li:"", ig:"",
+  timeline: [
+    {ano:"2002", titulo:"Graduação em Agronomia — UFSM", empresa:"Universidade Federal de Santa Maria", desc:"Ênfase em culturas irrigadas e lavouras orizícolas."},
+    {ano:"2003", titulo:"Analista de Mercado Júnior", empresa:"Cotrijal — Cooperativa Agropecuária e Industrial", desc:"Análise de preços e acompanhamento de safra."},
+    {ano:"2006", titulo:"Gerente de Classificação e Qualidade", empresa:"Camil Alimentos S.A.", desc:"Padronização de grãos para as linhas Premium e Tradicional."},
+    {ano:"2011", titulo:"Consultor de Mercado Sênior", empresa:"Josapar — Joaquim Oliveira S.A. Participações", desc:"Precificação e negociação de grandes lotes no RS e SC."},
+    {ano:"2016", titulo:"Especialista em Comercialização", empresa:"Cooperativa Languiru (Cotril)", desc:"Estratégias de venda e exportação."},
+    {ano:"2019", titulo:"Toledo Agro Consultoria", empresa:"Consultoria própria — São Gabriel, RS", desc:"Atendimento a beneficiadoras, cooperativas e investidores."},
+    {ano:"2025", titulo:"Lançamento da plataforma ArrozMarket", empresa:"Hub digital — São Gabriel, RS", desc:"Análises, cotações em tempo real e acervo de vídeos."}
+  ]
+}; }
+}
+function renderEspecialista() {
+  const e = getEsp();
+  const tl = (e.timeline || []).map(t =>
+    `<div class="lt-item"><div class="lt-ano">${t.ano}</div><div class="lt-ponto"></div>
+     <div class="lt-txt"><h4>${t.titulo}</h4><div class="empresa">${t.empresa}</div>
+     <p>${t.desc}</p></div></div>`).join('');
+  const redes = [
+    e.yt ? `<button class="btn-rede" onclick="window.open('${e.yt}','_blank')">YouTube</button>` : '',
+    e.li ? `<button class="btn-rede" onclick="window.open('${e.li}','_blank')">LinkedIn</button>` : '',
+    e.ig ? `<button class="btn-rede" onclick="window.open('${e.ig}','_blank')">Instagram</button>` : '',
+    (!e.yt && !e.li && !e.ig) ? '<button class="btn-rede">YouTube</button><button class="btn-rede">LinkedIn</button><button class="btn-rede">Instagram</button>' : ''
+  ].join('');
+  const el = document.getElementById('esp-render');
+  if (!el) return;
+  el.innerHTML = `
+  <div class="bio-grid">
+    <div>
+      <div class="bio-card">
+        <div class="bio-av">${e.iniciais || 'FT'}</div>
+        <div class="bio-nome">${e.nome}</div>
+        <div class="bio-cargo">${e.cargo}</div>
+        <div class="bio-local">📍 ${e.local}</div>
+        <div class="bio-stats">
+          <div class="bio-stat"><div class="bs-n">${e.stat1n}</div><div class="bs-l">${e.stat1l}</div></div>
+          <div class="bio-stat"><div class="bs-n">${e.stat2n}</div><div class="bs-l">${e.stat2l}</div></div>
+          <div class="bio-stat"><div class="bs-n">${e.stat3n}</div><div class="bs-l">${e.stat3l}</div></div>
+          <div class="bio-stat"><div class="bs-n">${e.stat4n}</div><div class="bs-l">${e.stat4l}</div></div>
+        </div>
+        <div class="bio-redes">${redes}</div>
+      </div>
+    </div>
+    <div class="bio-cont">
+      <div class="tag" style="margin-bottom:1rem">Quem é o especialista</div>
+      <h2>${e.nome}</h2>
+      <p class="dest">${e.frase}</p>
+      <p>${e.p1}</p>
+      <p>${e.p2}</p>
+      <div class="rotulo" style="margin-top:2rem;margin-bottom:1.4rem">Trajetória Profissional</div>
+      ${tl}
+    </div>
+  </div>`;
+}
 /* ═══ TOAST ═══ */
 let _tt;
 function toast(msg, tipo = '') {

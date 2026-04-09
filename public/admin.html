@@ -187,9 +187,13 @@ body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;f
       <div class="sb-section">Mercado</div>
       <div class="sb-item" onclick="mostrar('p-precos',this)"><span class="sb-icon">💰</span>Editar Preços</div>
       <div class="sb-item" onclick="mostrar('p-cepea',this)"><span class="sb-icon">🌐</span>Fonte de Cotações</div>
+      <div class="sb-item" onclick="mostrar('p-sheets',this)"><span class="sb-icon">📊</span>Google Sheets</div>
       <div class="sb-section">Site</div>
+      <div class="sb-item" onclick="mostrar('p-especialista',this)"><span class="sb-icon">🧑‍🌾</span>Página Especialista</div>
       <div class="sb-item" onclick="mostrar('p-bio',this)"><span class="sb-icon">👤</span>Minha Biografia</div>
       <div class="sb-item" onclick="mostrar('p-aparencia',this)"><span class="sb-icon">🎨</span>Aparência</div>
+      <div class="sb-section">Acesso</div>
+      <div class="sb-item" onclick="mostrar('p-usuarios',this)"><span class="sb-icon">👥</span>Usuários & Cargos</div>
       <div class="sb-item" onclick="mostrar('p-config',this)"><span class="sb-icon">⚙️</span>Configurações</div>
     </div>
 
@@ -386,6 +390,135 @@ body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;f
         </div></div>
       </div>
 
+
+      <!-- GOOGLE SHEETS -->
+      <div class="painel" id="p-sheets">
+        <div class="painel-titulo">Google Sheets — Cotações</div>
+        <div class="painel-sub">Configure uma planilha pública do Google como fonte de cotações. Ela tem prioridade sobre o scraper.</div>
+        <div class="grid2">
+          <div class="card"><div class="card-cab"><div class="card-titulo">🔗 URL da Planilha</div></div><div class="card-corpo">
+            <div class="form-grupo">
+              <label>URL da planilha (pública)</label>
+              <input type="text" id="sh-url" placeholder="https://docs.google.com/spreadsheets/d/...">
+            </div>
+            <div style="background:var(--dark3);border-radius:var(--r);padding:.9rem;margin-bottom:1rem;font-size:.78rem;color:var(--muted);line-height:1.7">
+              <strong style="color:var(--cream)">Como configurar:</strong><br>
+              1. Crie uma planilha no Google Sheets<br>
+              2. Adicione uma aba chamada <strong style="color:var(--gold)">Cotacoes</strong><br>
+              3. Colunas: <strong style="color:var(--gold)">A=id | B=nome | C=preço | D=variação | E=unidade</strong><br>
+              4. Publique em <em>Arquivo → Compartilhar → Publicar na web</em><br>
+              5. Cole a URL normal da planilha aqui
+            </div>
+            <div style="display:flex;gap:.6rem">
+              <button class="btn btn-prim" style="flex:1" onclick="salvarSheetUrl()">💾 Salvar URL</button>
+              <button class="btn btn-sec" onclick="testarSheet()">🔍 Testar</button>
+            </div>
+            <div id="sh-status" style="margin-top:.8rem;font-size:.78rem;display:none"></div>
+          </div></div>
+
+          <div class="card"><div class="card-cab"><div class="card-titulo">📋 Modelo de Planilha</div></div><div class="card-corpo">
+            <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">Copie esta estrutura para sua planilha:</p>
+            <table class="tabela-adm">
+              <thead><tr><th>A — id</th><th>B — nome</th><th>C — preco</th><th>D — variacao</th><th>E — unidade</th></tr></thead>
+              <tbody>
+                <tr><td style="color:var(--gold)">cas</td><td>Em Casca ESALQ</td><td>65.00</td><td>0.00</td><td>sc 50kg</td></tr>
+                <tr><td style="color:var(--gold)">mf_rs</td><td>Mercado Físico RS</td><td>62.00</td><td>0.00</td><td>sc 50kg</td></tr>
+                <tr><td style="color:var(--gold)">agl</td><td>Agulhinha Irrigado</td><td>48.00</td><td>0.00</td><td>sc 50kg</td></tr>
+                <tr><td style="color:var(--gold)">lf</td><td>Longo Fino MT</td><td>60.00</td><td>0.00</td><td>sc 60kg</td></tr>
+                <tr><td style="color:var(--gold)">ben</td><td>Beneficiado T1</td><td>118.00</td><td>-6.35</td><td>sc 60kg</td></tr>
+                <tr><td style="color:var(--gold)">parb</td><td>Parboilizado T1</td><td>155.20</td><td>2.40</td><td>sc 60kg</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:.8rem">
+              <a id="sh-modelo-link" href="#" style="font-size:.78rem;color:var(--gold)" onclick="criarModeloSheet(event)">⬇ Baixar CSV modelo</a>
+            </div>
+          </div></div>
+        </div>
+
+        <div class="card"><div class="card-cab"><div class="card-titulo">📡 Status da Conexão</div></div><div class="card-corpo">
+          <div id="sh-preview" style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">
+            Configure uma URL acima e clique em "Testar" para ver as cotações da planilha.
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ESPECIALISTA -->
+      <div class="painel" id="p-especialista">
+        <div class="painel-titulo">Página Especialista</div>
+        <div class="painel-sub">Edite todas as informações exibidas na seção "Especialista" do site.</div>
+
+        <div class="grid2">
+          <div class="card"><div class="card-cab"><div class="card-titulo">👤 Dados Pessoais</div></div><div class="card-corpo">
+            <div class="form-row">
+              <div class="form-grupo"><label>Iniciais (avatar)</label><input type="text" id="esp-iniciais" maxlength="2" value="FT"></div>
+              <div class="form-grupo"><label>Nome Completo</label><input type="text" id="esp-nome" value="Fábio Toledo"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-grupo"><label>Cargo / Título</label><input type="text" id="esp-cargo" value="Especialista em Mercado Orizícola"></div>
+              <div class="form-grupo"><label>Localização</label><input type="text" id="esp-local" value="São Gabriel — RS"></div>
+            </div>
+            <div class="form-grupo"><label>Citação de destaque</label>
+              <textarea id="esp-frase" rows="2">"O arroz gaúcho não é apenas um grão — é identidade, tecnologia e mercado."</textarea>
+            </div>
+            <div class="form-grupo"><label>Parágrafo 1</label>
+              <textarea id="esp-p1" rows="3">Natural de São Gabriel (RS), Fábio Toledo construiu sua trajetória inteiramente dentro do setor orizícola. Formado em Agronomia pela UFSM, com especialização em Mercados Agrícolas.</textarea>
+            </div>
+            <div class="form-grupo"><label>Parágrafo 2</label>
+              <textarea id="esp-p2" rows="3">Acumula mais de duas décadas de experiência em análise de preços, classificação de grãos e consultoria para cooperativas, beneficiadoras e tradings do Sul do Brasil.</textarea>
+            </div>
+          </div></div>
+
+          <div class="card"><div class="card-cab"><div class="card-titulo">📊 Estatísticas & Redes</div></div><div class="card-corpo">
+            <div class="form-row">
+              <div class="form-grupo"><label>Stat 1 — Número</label><input type="text" id="esp-s1n" value="22"></div>
+              <div class="form-grupo"><label>Stat 1 — Legenda</label><input type="text" id="esp-s1l" value="Anos de mercado"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-grupo"><label>Stat 2 — Número</label><input type="text" id="esp-s2n" value="850+"></div>
+              <div class="form-grupo"><label>Stat 2 — Legenda</label><input type="text" id="esp-s2l" value="Análises publicadas"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-grupo"><label>Stat 3 — Número</label><input type="text" id="esp-s3n" value="340+"></div>
+              <div class="form-grupo"><label>Stat 3 — Legenda</label><input type="text" id="esp-s3l" value="Vídeos gravados"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-grupo"><label>Stat 4 — Número</label><input type="text" id="esp-s4n" value="RS/SC"></div>
+              <div class="form-grupo"><label>Stat 4 — Legenda</label><input type="text" id="esp-s4l" value="Abrangência"></div>
+            </div>
+            <hr style="border-color:rgba(200,168,75,.1);margin:1rem 0">
+            <div class="form-grupo"><label>YouTube</label><input type="url" id="esp-yt" placeholder="https://youtube.com/@..."></div>
+            <div class="form-grupo"><label>LinkedIn</label><input type="url" id="esp-li" placeholder="https://linkedin.com/in/..."></div>
+            <div class="form-grupo"><label>Instagram</label><input type="url" id="esp-ig" placeholder="https://instagram.com/..."></div>
+          </div></div>
+        </div>
+
+        <div class="card"><div class="card-cab">
+          <div class="card-titulo">📅 Trajetória Profissional</div>
+          <button class="btn btn-prim btn-sm" onclick="addItemTimeline()">+ Adicionar item</button>
+        </div><div class="card-corpo">
+          <div id="esp-timeline"></div>
+        </div></div>
+
+        <div style="display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem">
+          <button class="btn btn-sec" onclick="carregarEspForm()">↺ Reverter</button>
+          <button class="btn btn-prim" onclick="salvarEspecialista()">💾 Salvar e Publicar</button>
+        </div>
+      </div>
+
+      <!-- USUÁRIOS & CARGOS -->
+      <div class="painel" id="p-usuarios">
+        <div class="painel-titulo">Usuários & Cargos</div>
+        <div class="painel-sub">Gerencie membros e permissões de acesso ao painel administrativo.</div>
+        <div class="card"><div class="card-cab">
+          <div class="card-titulo">👥 Todos os usuários</div>
+          <button class="btn btn-sec btn-sm" onclick="carregarUsuarios()">🔄 Atualizar</button>
+        </div><div class="card-corpo">
+          <table class="tabela-adm">
+            <thead><tr><th>Nome</th><th>E-mail</th><th>Cargo</th><th>Desde</th><th>Ação</th></tr></thead>
+            <tbody id="tb-usuarios"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem">Carregando...</td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
       <!-- APARÊNCIA -->
       <div class="painel" id="p-aparencia">
         <div class="painel-titulo">Aparência do Site</div>
@@ -522,15 +655,40 @@ const S = {
 S.p = new Float32Array(S.pBase);
 
 /* ═══ LOGIN ═══ */
-function fazerLogin(){
-  if(document.getElementById('loginUser').value.trim()==='fabio.toledo' && document.getElementById('loginPass').value==='admin123'){
+async function fazerLogin(){
+  const email = document.getElementById('loginUser').value.trim();
+  const senha = document.getElementById('loginPass').value;
+  const erroEl = document.getElementById('loginErro');
+  erroEl.style.display = 'none';
+  if (!email || !senha) { erroEl.textContent='Preencha e-mail e senha.'; erroEl.style.display='block'; return; }
+  try {
+    const r = await fetch(API_ADMIN + '/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, senha})
+    });
+    const j = await r.json();
+    if (!r.ok) { erroEl.textContent = j.erro || 'Credenciais inválidas.'; erroEl.style.display='block'; return; }
+    if (j.usuario?.role !== 'admin') { erroEl.textContent='Acesso restrito a administradores.'; erroEl.style.display='block'; return; }
+    adminToken = j.token;
+    localStorage.setItem('am_admin_tok', adminToken);
     document.getElementById('login-screen').style.display='none';
     const w=document.getElementById('app-wrap'); w.style.opacity='1'; w.style.pointerEvents='auto';
     iniciar();
-  } else { document.getElementById('loginErro').style.display='block'; }
+  } catch(e) {
+    erroEl.textContent = 'Erro de conexão com o servidor.';
+    erroEl.style.display = 'block';
+  }
 }
 document.getElementById('loginPass').addEventListener('keydown',e=>{ if(e.key==='Enter') fazerLogin(); });
-function sair(){ clearInterval(S.timer); document.getElementById('login-screen').style.display='flex'; document.getElementById('app-wrap').style.opacity='0'; toast('Sessão encerrada.','ouro'); }
+function sair(){
+  clearInterval(S.timer);
+  adminToken = null;
+  localStorage.removeItem('am_admin_tok');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app-wrap').style.opacity='0';
+  document.getElementById('app-wrap').style.pointerEvents='none';
+  toast('Sessão encerrada.','ouro');
+}
 
 /* ═══ NAV ═══ */
 function mostrar(id,el){
@@ -696,7 +854,15 @@ function aplicarCor(hex,i){ S.swatchAtivo=i; document.documentElement.style.setP
 /* ═══ SENHA ═══ */
 function forcaSenha(v){ const f=[/.{8,}/,/[A-Z]/,/[0-9]/,/[^a-zA-Z0-9]/].filter(r=>r.test(v)).length; const w=[0,25,50,80,100][f]; const cores=['#C04A4A','#C04A4A','#C89648','#C8A84B','#6BA67A']; const b=document.getElementById('barra-forca'); if(b){b.style.width=w+'%';b.style.background=cores[f];} }
 function alterarSenha(){ const a=document.getElementById('s-atual').value,n=document.getElementById('s-nova').value,c=document.getElementById('s-conf').value; if(!a){toast('Informe a senha atual.','erro');return;} if(n.length<6){toast('Mínimo 6 caracteres.','erro');return;} if(n!==c){toast('Senhas não coincidem.','erro');return;} toast('Senha alterada!','sucesso'); ['s-atual','s-nova','s-conf'].forEach(id=>{document.getElementById(id).value='';}); }
-function salvarBio(){ localStorage.setItem('am_bio',JSON.stringify({nome:document.getElementById('bio-nome').value,cargo:document.getElementById('bio-cargo').value,local:document.getElementById('bio-local').value})); toast('Biografia salva!','sucesso'); }
+function salvarBio(){
+  const esp = JSON.parse(localStorage.getItem('am_esp') || '{}');
+  esp.nome  = document.getElementById('bio-nome')?.value || esp.nome;
+  esp.cargo = document.getElementById('bio-cargo')?.value || esp.cargo;
+  esp.local = document.getElementById('bio-local')?.value || esp.local;
+  localStorage.setItem('am_esp', JSON.stringify(esp));
+  localStorage.setItem('am_bio', JSON.stringify({nome:esp.nome,cargo:esp.cargo,local:esp.local}));
+  toast('Biografia salva!','sucesso');
+}
 
 /* ═══ EXPORTAR ═══ */
 function exportar(tipo){
@@ -763,12 +929,154 @@ function renderMiniFromApi(cots) {
     </tr>`).join('') + '</table>';
 }
 
+
+/* ═══ GOOGLE SHEETS ═══ */
+function salvarSheetUrl(){
+  const url = document.getElementById('sh-url').value.trim();
+  if (!url) { toast('Cole a URL da planilha.','erro'); return; }
+  localStorage.setItem('am_sheets_url', url);
+  toast('URL salva! As cotações do site usarão a planilha.','sucesso');
+}
+async function testarSheet(){
+  const url = document.getElementById('sh-url').value.trim() || localStorage.getItem('am_sheets_url');
+  const st = document.getElementById('sh-status');
+  const prev = document.getElementById('sh-preview');
+  if (!url) { toast('Cole a URL primeiro.','erro'); return; }
+  st.style.display='block'; st.style.color='var(--gold)'; st.textContent='🔄 Conectando...';
+  try {
+    const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (!match) throw new Error('URL inválida');
+    const id = match[1];
+    const jsonUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&sheet=Cotacoes`;
+    const r = await fetch(jsonUrl, {cache:'no-store'});
+    const txt = await r.text();
+    const json = JSON.parse(txt.replace(/^[^(]+\(|\);?$/g,''));
+    const rows = json.table.rows;
+    const cots = rows.map(row => {
+      const c = row.c;
+      return {id:(c[0]?.v||'').toString(), nome:(c[1]?.v||'').toString(),
+              preco:parseFloat((c[2]?.v||'0').toString().replace(',','.')),
+              variacao:parseFloat((c[3]?.v||'0').toString().replace(',','.')),
+              unidade:(c[4]?.v||'sc 60kg').toString()};
+    }).filter(c => c.id && c.preco > 0);
+    if (!cots.length) throw new Error('Nenhuma cotação encontrada na aba "Cotacoes"');
+    st.style.color='var(--green2)'; st.textContent=`✅ Conectado! ${cots.length} cotações encontradas.`;
+    prev.innerHTML = '<table class="tabela-adm"><thead><tr><th>ID</th><th>Nome</th><th>Preço</th><th>Variação</th><th>Unidade</th></tr></thead><tbody>' +
+      cots.map(c=>`<tr><td style="color:var(--gold)">${c.id}</td><td>${c.nome}</td><td style="color:var(--cream)">R$ ${c.preco.toFixed(2)}</td><td>${c.variacao>=0?'+':''}${c.variacao.toFixed(2)}</td><td style="color:var(--muted)">${c.unidade}</td></tr>`).join('')
+      + '</tbody></table>';
+    localStorage.setItem('am_sheets_url', url);
+  } catch(e) {
+    st.style.color='var(--red)'; st.textContent='❌ Erro: ' + e.message;
+    prev.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:1rem">Verifique se a planilha está pública e com a aba chamada exatamente <strong>Cotacoes</strong>.</div>';
+  }
+}
+function criarModeloSheet(e){
+  e.preventDefault();
+  const csv = 'id,nome,preco,variacao,unidade\ncas,Em Casca ESALQ,65.00,0.00,sc 50kg\nmf_rs,Mercado Fisico RS,62.00,0.00,sc 50kg\nagl,Agulhinha Irrigado,48.00,0.00,sc 50kg\nlf,Longo Fino MT,60.00,0.00,sc 60kg\nben,Beneficiado T1,118.00,-6.35,sc 60kg\nparb,Parboilizado T1,155.20,2.40,sc 60kg\nint,Integral T1,175.80,3.10,sc 60kg\ncat,Cateto T1,95.00,-0.50,sc 60kg\nqui,Quirera,38.50,-0.30,sc 60kg';
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'cotacoes_modelo.csv'; a.click();
+}
+
+/* ═══ ESPECIALISTA ═══ */
+function getEspData(){
+  try { return JSON.parse(localStorage.getItem('am_esp')||'{}'); } catch(e){ return {}; }
+}
+function carregarEspForm(){
+  const e = getEspData();
+  const g = (id,def='') => { const el=document.getElementById(id); if(el) el.value=e[id.replace('esp-','').replace(/-/g,'')]||def; };
+  const esp = e;
+  document.getElementById('esp-iniciais').value = esp.iniciais||'FT';
+  document.getElementById('esp-nome').value = esp.nome||'Fábio Toledo';
+  document.getElementById('esp-cargo').value = esp.cargo||'Especialista em Mercado Orizícola';
+  document.getElementById('esp-local').value = esp.local||'São Gabriel — RS';
+  document.getElementById('esp-frase').value = esp.frase||'"O arroz gaúcho não é apenas um grão — é identidade, tecnologia e mercado."';
+  document.getElementById('esp-p1').value = esp.p1||'';
+  document.getElementById('esp-p2').value = esp.p2||'';
+  document.getElementById('esp-s1n').value = esp.stat1n||'22';
+  document.getElementById('esp-s1l').value = esp.stat1l||'Anos de mercado';
+  document.getElementById('esp-s2n').value = esp.stat2n||'850+';
+  document.getElementById('esp-s2l').value = esp.stat2l||'Análises publicadas';
+  document.getElementById('esp-s3n').value = esp.stat3n||'340+';
+  document.getElementById('esp-s3l').value = esp.stat3l||'Vídeos gravados';
+  document.getElementById('esp-s4n').value = esp.stat4n||'RS/SC';
+  document.getElementById('esp-s4l').value = esp.stat4l||'Abrangência';
+  document.getElementById('esp-yt').value = esp.yt||'';
+  document.getElementById('esp-li').value = esp.li||'';
+  document.getElementById('esp-ig').value = esp.ig||'';
+  renderTimelineForm(esp.timeline || []);
+}
+function renderTimelineForm(tl){
+  const c = document.getElementById('esp-timeline');
+  if(!c) return;
+  c.innerHTML = tl.map((t,i) => `
+    <div class="tl-item-form" id="tl-${i}" style="display:grid;grid-template-columns:80px 1fr 1fr auto;gap:.5rem;margin-bottom:.7rem;align-items:start">
+      <input type="text" placeholder="Ano" value="${t.ano||''}" oninput="tlUpdate(${i},'ano',this.value)" style="font-size:.78rem">
+      <input type="text" placeholder="Título" value="${t.titulo||''}" oninput="tlUpdate(${i},'titulo',this.value)" style="font-size:.78rem">
+      <input type="text" placeholder="Empresa/Local" value="${t.empresa||''}" oninput="tlUpdate(${i},'empresa',this.value)" style="font-size:.78rem">
+      <button onclick="remItemTimeline(${i})" style="background:rgba(224,112,112,.15);border:1px solid rgba(224,112,112,.3);color:#E07070;border-radius:4px;padding:.3rem .6rem;cursor:pointer;font-size:.8rem">✕</button>
+      <input type="text" placeholder="Descrição" value="${t.desc||''}" oninput="tlUpdate(${i},'desc',this.value)" style="font-size:.78rem;grid-column:1/-1">
+    </div>`).join('');
+}
+let _tlData = [];
+function tlUpdate(i,k,v){ if(_tlData[i]) _tlData[i][k]=v; }
+function addItemTimeline(){
+  _tlData.push({ano:new Date().getFullYear().toString(),titulo:'',empresa:'',desc:''});
+  renderTimelineForm(_tlData);
+}
+function remItemTimeline(i){ _tlData.splice(i,1); renderTimelineForm(_tlData); }
+function salvarEspecialista(){
+  const esp = {
+    iniciais: document.getElementById('esp-iniciais').value,
+    nome:  document.getElementById('esp-nome').value,
+    cargo: document.getElementById('esp-cargo').value,
+    local: document.getElementById('esp-local').value,
+    frase: document.getElementById('esp-frase').value,
+    p1:    document.getElementById('esp-p1').value,
+    p2:    document.getElementById('esp-p2').value,
+    stat1n:document.getElementById('esp-s1n').value, stat1l:document.getElementById('esp-s1l').value,
+    stat2n:document.getElementById('esp-s2n').value, stat2l:document.getElementById('esp-s2l').value,
+    stat3n:document.getElementById('esp-s3n').value, stat3l:document.getElementById('esp-s3l').value,
+    stat4n:document.getElementById('esp-s4n').value, stat4l:document.getElementById('esp-s4l').value,
+    yt: document.getElementById('esp-yt').value,
+    li: document.getElementById('esp-li').value,
+    ig: document.getElementById('esp-ig').value,
+    timeline: _tlData,
+  };
+  localStorage.setItem('am_esp', JSON.stringify(esp));
+  toast('✅ Página Especialista atualizada!','sucesso');
+}
+
+/* ═══ USUÁRIOS ═══ */
+async function carregarUsuarios(){
+  try {
+    const users = await apiAdm('GET','/admin/usuarios');
+    const tb = document.getElementById('tb-usuarios');
+    if(!tb) return;
+    tb.innerHTML = users.map(u => `<tr>
+      <td style="color:var(--cream)">${u.nome}</td>
+      <td style="color:var(--muted);font-size:.8rem">${u.email}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-pub':'badge-ras'}">${u.role==='admin'?'Admin':'Membro'}</span></td>
+      <td style="color:var(--muted);font-size:.72rem">${new Date(u.criadoEm).toLocaleDateString('pt-BR')}</td>
+      <td>
+        ${u.role!=='admin'
+          ? `<button class="btn btn-prim btn-sm" onclick="mudarCargo(${u.id},'admin')">↑ Promover</button>`
+          : `<button class="btn btn-sec btn-sm" onclick="mudarCargo(${u.id},'user')">↓ Rebaixar</button>`}
+      </td>
+    </tr>`).join('');
+  } catch(e) { toast('Erro ao carregar usuários: '+e.message,'erro'); }
+}
+async function mudarCargo(id,role){
+  try {
+    await apiAdm('PUT','/admin/usuarios/'+id+'/role',{role});
+    toast(role==='admin'?'✅ Usuário promovido a Admin!':'⬇ Cargo alterado para Membro.','sucesso');
+    carregarUsuarios();
+  } catch(e) { toast('Erro: '+e.message,'erro'); }
+}
+
 /* ═══ BOOT ═══ */
 async function iniciar(){
   document.getElementById('v-data').value = new Date().toISOString().split('T')[0];
-  
-  /* Autentica na API para obter token admin */
-  await loginApi();
   
   /* Carrega dados reais da API */
   await carregarVideosAdmin();
@@ -786,6 +1094,26 @@ async function iniciar(){
   /* Atualiza timestamp na visão de cotações */
   const el = document.getElementById('ultimaColeta');
   if (el) el.textContent = new Date().toLocaleString('pt-BR');
+  
+  /* Preenche URL do Google Sheets */
+  const shEl = document.getElementById('sh-url');
+  if (shEl) shEl.value = localStorage.getItem('am_sheets_url') || '';
+  
+  /* Carrega formulário do especialista */
+  try { _tlData = JSON.parse(localStorage.getItem('am_esp')||'{}').timeline || defaultTimeline(); } catch(e){ _tlData = defaultTimeline(); }
+  try { carregarEspForm(); } catch(e){}
+  
+  /* Carrega usuários */
+  try { carregarUsuarios(); } catch(e){}
+}
+
+function defaultTimeline(){
+  return [
+    {ano:"2002",titulo:"Graduação em Agronomia — UFSM",empresa:"Universidade Federal de Santa Maria",desc:"Ênfase em culturas irrigadas e lavouras orizícolas."},
+    {ano:"2003",titulo:"Analista de Mercado Júnior",empresa:"Cotrijal",desc:"Análise de preços e acompanhamento de safra."},
+    {ano:"2019",titulo:"Toledo Agro Consultoria",empresa:"Consultoria própria — São Gabriel, RS",desc:"Atendimento a beneficiadoras, cooperativas e investidores."},
+    {ano:"2025",titulo:"Lançamento da plataforma ArrozMarket",empresa:"Hub digital — São Gabriel, RS",desc:"Análises, cotações em tempo real e acervo de vídeos."}
+  ];
 }
 
 /* Carrega vídeos da API */
