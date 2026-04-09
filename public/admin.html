@@ -806,7 +806,7 @@ function prevUrl(url){
   else w.style.display='none';
 }
 function prevThumb(inp){ const r=new FileReader(); r.onload=e=>{ document.getElementById('thumb-img').src=e.target.result; document.getElementById('thumb-prev').style.display='block'; }; r.readAsDataURL(inp.files[0]); }
-function publicarVideo(){
+async function publicarVideo(){
   const titulo=document.getElementById('v-titulo').value.trim(), data=document.getElementById('v-data').value;
   if(!titulo||!data){ toast('Preencha título e data.','erro'); return; }
   const novo={id:S.nextId++,titulo,data:new Date(data+'T12:00:00').toLocaleDateString('pt-BR'),dur:document.getElementById('v-dur').value||'00:00',url:document.getElementById('v-url').value,cat:document.getElementById('v-cat').value,status:document.getElementById('v-status').value,desc:document.getElementById('v-desc').value,views:0};
