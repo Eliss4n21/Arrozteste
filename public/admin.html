@@ -147,6 +147,27 @@ body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;f
 ::-webkit-scrollbar-thumb{background:rgba(200,168,75,.2);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:rgba(200,168,75,.4)}
 @media(max-width:900px){#sidebar{display:none}.metricas-grid{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+/* ── PRÉ-VISUALIZAÇÃO ADMIN ── */
+.adm-player-wrap { aspect-ratio:16/9; max-width:480px; border-radius:var(--r); overflow:hidden; border:1px solid var(--gold-b); position:relative; background:#000; }
+.adm-thumb-screen { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.adm-thumb-screen img { width:100%; height:100%; object-fit:cover; opacity:.82; transition:opacity .25s; }
+.adm-thumb-screen:hover img { opacity:.65; }
+.adm-play-btn { position:absolute; width:56px; height:56px; border-radius:50%; background:rgba(200,168,75,.92); display:flex; align-items:center; justify-content:center; transition:transform .2s; }
+.adm-thumb-screen:hover .adm-play-btn { transform:scale(1.1); }
+.adm-play-btn svg { width:22px; height:22px; fill:#0B0B09; margin-left:4px; }
+.adm-no-url { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; color:var(--muted); font-size:.82rem; }
+.adm-no-url strong { font-family:'Playfair Display',serif; color:var(--gold); }
+#adm-yt-player-el { position:absolute; inset:0; width:100%; height:100%; display:none; }
+.adm-controls { position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent,rgba(11,11,9,.96)); padding:.45rem .75rem .5rem; display:flex; flex-direction:column; gap:.3rem; opacity:0; transition:opacity .3s; pointer-events:none; }
+.adm-player-wrap:hover .adm-controls, .adm-controls.vis { opacity:1; pointer-events:all; }
+.adm-prog-wrap { height:3px; background:rgba(255,255,255,.18); border-radius:2px; cursor:pointer; position:relative; }
+.adm-prog-fill { position:absolute; left:0; top:0; height:100%; background:var(--gold); border-radius:2px; width:0%; }
+.adm-ctrl-row { display:flex; align-items:center; gap:.5rem; }
+.adm-cbtn { background:none; border:none; cursor:pointer; color:rgba(255,255,255,.85); width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:3px; transition:color .15s; padding:0; }
+.adm-cbtn:hover { color:var(--gold); }
+.adm-cbtn svg { width:15px; height:15px; fill:currentColor; }
+.adm-time { font-size:.65rem; color:rgba(255,255,255,.65); }
+.adm-spacer { flex:1; }
 /* ═══ TRAJETÓRIA PROFISSIONAL — Timeline Form ═══ */
 #esp-timeline{display:flex;flex-direction:column;gap:.6rem}
 .tl-item-form{display:grid;grid-template-columns:80px 1fr 1fr auto;gap:.5rem;align-items:start;background:rgba(200,168,75,.04);border:1px solid rgba(200,168,75,.1);border-radius:var(--r);padding:.6rem .7rem}
@@ -282,7 +303,35 @@ body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;f
           </div>
           <div id="embed-wrap" style="margin-bottom:1rem;display:none">
             <div class="form-grupo"><label>Pré-visualização</label></div>
-            <div style="aspect-ratio:16/9;max-width:480px;border-radius:var(--r);overflow:hidden;border:1px solid var(--gold-b)"><iframe id="embed-frame" width="100%" height="100%" frameborder="0" allowfullscreen></iframe></div>
+            <div class="adm-player-wrap" id="adm-player-wrap">
+              <!-- Thumbnail / play -->
+              <div class="adm-thumb-screen" id="adm-thumb-screen" onclick="admStart()">
+                <img id="adm-thumb-img" src="" alt="">
+                <div class="adm-play-btn">
+                  <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+              <!-- Sem URL -->
+              <div class="adm-no-url" id="adm-no-url" style="display:none">
+                <strong>▶ Player</strong><span>URL inválida</span>
+              </div>
+              <!-- Player YT montado aqui via JS -->
+              <!-- Controles -->
+              <div class="adm-controls" id="adm-controls">
+                <div class="adm-prog-wrap" id="adm-prog-wrap" onmousedown="admSeek(event)">
+                  <div class="adm-prog-fill" id="adm-prog-fill"></div>
+                </div>
+                <div class="adm-ctrl-row">
+                  <button class="adm-cbtn" onclick="admToggle()">
+                    <svg id="adm-ico-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg id="adm-ico-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                  </button>
+                  <span class="adm-time" id="adm-time">0:00 / 0:00</span>
+                  <div class="adm-spacer"></div>
+                  <a id="adm-yt-link" href="#" target="_blank" style="font-size:.65rem;color:rgba(255,255,255,.45);text-decoration:none">▶ YouTube</a>
+                </div>
+              </div>
+            </div>
           </div>
           <div style="display:flex;gap:.8rem;justify-content:flex-end">
             <button class="btn btn-sec" onclick="limparForm()">Limpar</button>
@@ -824,13 +873,125 @@ async function salvarEdit(id){
 }
 function salvarV(){ localStorage.setItem('am_v',JSON.stringify(S.videos)); }
 
-/* ═══ PUBLICAR ═══ */
+/* ════════════════════════════════
+   PLAYER ADMIN — ArrozMarket v2
+════════════════════════════════ */
+const ADM_P = { ytPlayer: null, playing: false, rafId: null, videoId: null };
+
+function admExtractId(url) {
+  const m = (url||'').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/);
+  return m ? m[1] : null;
+}
+function admFmt(s) { if(isNaN(s)||s<0) return '0:00'; const m=Math.floor(s/60),ss=Math.floor(s%60); return m+':'+String(ss).padStart(2,'0'); }
+
+function admLoadYTApi() {
+  if (window.YT && window.YT.Player) return;
+  if (document.getElementById('adm-yt-api')) return;
+  const s = document.createElement('script'); s.id='adm-yt-api'; s.src='https://www.youtube.com/iframe_api'; document.head.appendChild(s);
+}
+/* YT API callback — pode ser chamado antes ou depois do site */
+if (!window.onYouTubeIframeAPIReady) {
+  window.onYouTubeIframeAPIReady = function() { window._ytReady = true; };
+}
+admLoadYTApi();
+
 function prevUrl(url){
-  const yt=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/), vm=url.match(/vimeo\.com\/(\d+)/);
-  const f=document.getElementById('embed-frame'), w=document.getElementById('embed-wrap');
-  if(yt){ f.src=`https://www.youtube.com/embed/${yt[1]}`; w.style.display='block'; }
-  else if(vm){ f.src=`https://player.vimeo.com/video/${vm[1]}`; w.style.display='block'; }
-  else w.style.display='none';
+  const id = admExtractId(url);
+  const wrap = document.getElementById('embed-wrap');
+  const thumb = document.getElementById('adm-thumb-screen');
+  const noUrl = document.getElementById('adm-no-url');
+  const thumbImg = document.getElementById('adm-thumb-img');
+
+  // Limpa player anterior
+  const prev = document.getElementById('adm-yt-player-el');
+  if (prev) prev.remove();
+  ADM_P.ytPlayer = null; ADM_P.playing = false; ADM_P.videoId = null;
+  cancelAnimationFrame(ADM_P.rafId);
+  document.getElementById('adm-ico-play').style.display  = '';
+  document.getElementById('adm-ico-pause').style.display = 'none';
+  document.getElementById('adm-prog-fill').style.width   = '0%';
+  document.getElementById('adm-time').textContent        = '0:00 / 0:00';
+
+  if (id) {
+    wrap.style.display = 'block';
+    ADM_P.videoId = id;
+    thumbImg.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+    thumbImg.onerror = () => { thumbImg.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; };
+    thumb.style.display = '';
+    noUrl.style.display = 'none';
+    document.getElementById('adm-yt-link').href = 'https://www.youtube.com/watch?v=' + id;
+    // Cria container e inicializa player YT
+    const admTryInit = () => {
+      if (window.YT && window.YT.Player) {
+        const container = document.createElement('div');
+        container.id = 'adm-yt-player-el';
+        container.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:none;';
+        document.getElementById('adm-player-wrap').insertBefore(container, document.getElementById('adm-controls'));
+        ADM_P.ytPlayer = new YT.Player('adm-yt-player-el', {
+          videoId: id,
+          playerVars: { autoplay: 0, controls: 0, modestbranding: 1, rel: 0, iv_load_policy: 3, disablekb: 1 },
+          events: {
+            onReady: (e) => {
+              document.getElementById('adm-time').textContent = '0:00 / ' + admFmt(e.target.getDuration());
+            },
+            onStateChange: (e) => {
+              const playing = e.data === YT.PlayerState.PLAYING;
+              ADM_P.playing = playing;
+              document.getElementById('adm-ico-play').style.display  = playing ? 'none' : '';
+              document.getElementById('adm-ico-pause').style.display = playing ? '' : 'none';
+              document.getElementById('adm-controls').classList.add('vis');
+              if (playing) admRaf(); else cancelAnimationFrame(ADM_P.rafId);
+              if (e.data === YT.PlayerState.ENDED) {
+                ADM_P.playing = false;
+                document.getElementById('adm-thumb-screen').style.display = '';
+                document.getElementById('adm-ico-play').style.display = '';
+                document.getElementById('adm-ico-pause').style.display = 'none';
+              }
+            }
+          }
+        });
+      } else { setTimeout(admTryInit, 200); }
+    };
+    admTryInit();
+  } else if (url.length > 4) {
+    wrap.style.display = 'block';
+    thumb.style.display = 'none';
+    noUrl.style.display = '';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function admStart() {
+  if (!ADM_P.videoId || !ADM_P.ytPlayer) return;
+  document.getElementById('adm-thumb-screen').style.display = 'none';
+  const el = document.getElementById('adm-yt-player-el');
+  if (el) el.style.display = '';
+  try { ADM_P.ytPlayer.playVideo(); } catch(e) {}
+}
+function admToggle() {
+  if (!ADM_P.ytPlayer) return;
+  try {
+    if (ADM_P.playing) ADM_P.ytPlayer.pauseVideo();
+    else { document.getElementById('adm-thumb-screen').style.display='none'; const el=document.getElementById('adm-yt-player-el'); if(el) el.style.display=''; ADM_P.ytPlayer.playVideo(); }
+  } catch(e) {}
+}
+function admSeek(e) {
+  if (!ADM_P.ytPlayer) return;
+  const rect = document.getElementById('adm-prog-wrap').getBoundingClientRect();
+  const ratio = Math.max(0, Math.min(1,(e.clientX-rect.left)/rect.width));
+  try { ADM_P.ytPlayer.seekTo(ratio * ADM_P.ytPlayer.getDuration(), true); } catch(err){}
+}
+function admRaf() {
+  ADM_P.rafId = requestAnimationFrame(() => {
+    if (!ADM_P.ytPlayer || !ADM_P.playing) return;
+    try {
+      const cur = ADM_P.ytPlayer.getCurrentTime(), dur = ADM_P.ytPlayer.getDuration() || 1;
+      document.getElementById('adm-prog-fill').style.width = (cur/dur*100)+'%';
+      document.getElementById('adm-time').textContent = admFmt(cur)+' / '+admFmt(dur);
+    } catch(e) {}
+    admRaf();
+  });
 }
 function prevThumb(inp){ const r=new FileReader(); r.onload=e=>{ document.getElementById('thumb-img').src=e.target.result; document.getElementById('thumb-prev').style.display='block'; }; r.readAsDataURL(inp.files[0]); }
 async function publicarVideo(){
@@ -846,7 +1007,17 @@ async function publicarVideo(){
   S.atv.unshift({icon:'🎬',cls:'ouro',txt:`Publicado: <b style="color:var(--cream)">${titulo.slice(0,40)}</b>`,t:'agora'}); renderAtv(); limparForm();
   mostrar('p-videos',null); toast('Vídeo publicado!','sucesso');
 }
-function limparForm(){ ['v-titulo','v-url','v-dur','v-desc'].forEach(id=>{document.getElementById(id).value='';}); document.getElementById('embed-wrap').style.display='none'; document.getElementById('thumb-prev').style.display='none'; }
+function limparForm(){
+  ['v-titulo','v-url','v-dur','v-desc'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('embed-wrap').style.display='none';
+  document.getElementById('thumb-prev').style.display='none';
+  // Reseta player
+  const prev = document.getElementById('adm-yt-player-el');
+  if (prev) prev.remove();
+  if (ADM_P.ytPlayer) { try { ADM_P.ytPlayer.destroy(); } catch(e){} }
+  ADM_P.ytPlayer = null; ADM_P.playing = false; ADM_P.videoId = null;
+  cancelAnimationFrame(ADM_P.rafId);
+}
 
 /* ═══ PREÇOS ═══ */
 function renderTabPrecos(){
