@@ -40,14 +40,14 @@ const DEFAULT = {
     },
   ],
   videos: [
-    { id:1, titulo:'Safra 2025 e Impactos nos Preços',         data:'07/04/2025', dur:'12:48', url:'', cat:'Análise Diária', status:'pub', views:3400, likes:1247 },
-    { id:2, titulo:'Impacto do clima na safra do RS',           data:'03/04/2025', dur:'09:32', url:'', cat:'Análise Diária', status:'pub', views:2100, likes:87   },
+    { id:1, titulo:'Safra 2025 e Impactos nos Preços',         data:'07/04/2025', dur:'12:48', url:'', cat:'Podcast Diário', status:'pub', views:3400, likes:1247 },
+    { id:2, titulo:'Impacto do clima na safra do RS',           data:'03/04/2025', dur:'09:32', url:'', cat:'Podcast Diário', status:'pub', views:2100, likes:87   },
     { id:3, titulo:'Parboilizado em alta: por que sobe?',       data:'02/04/2025', dur:'14:05', url:'', cat:'Cotações',      status:'pub', views:3800, likes:214  },
-    { id:4, titulo:'Abertura de abril: o que esperar',          data:'01/04/2025', dur:'11:18', url:'', cat:'Análise Diária', status:'pub', views:4200, likes:198  },
+    { id:4, titulo:'Abertura de abril: o que esperar',          data:'01/04/2025', dur:'11:18', url:'', cat:'Podcast Diário', status:'pub', views:4200, likes:198  },
     { id:5, titulo:'Fechamento de março e balanço trimestral',  data:'31/03/2025', dur:'18:44', url:'', cat:'Especial',      status:'pub', views:5600, likes:312  },
     { id:6, titulo:'Arroz integral: demanda aquecida',          data:'28/03/2025', dur:'08:55', url:'', cat:'Cotações',      status:'pub', views:2900, likes:105  },
     { id:7, titulo:'Dólar e exportações — reflexo no preço',    data:'27/03/2025', dur:'13:22', url:'', cat:'Técnico',       status:'pub', views:3300, likes:143  },
-    { id:8, titulo:'Colheita RS 2025: ritmo e projeções',       data:'25/03/2025', dur:'12:38', url:'', cat:'Análise Diária', status:'pub', views:6100, likes:389  },
+    { id:8, titulo:'Colheita RS 2025: ritmo e projeções',       data:'25/03/2025', dur:'12:38', url:'', cat:'Podcast Diário', status:'pub', views:6100, likes:389  },
   ],
   cotacoes: [
     { id:'cas',   nome:'Em Casca (ESALQ/Senar-RS)',     preco: 65.00, variacao: 0.00, cls:'estavel', unidade:'sc 50kg', fonte:'Cepea/Esalq'        },
@@ -75,8 +75,8 @@ const db = {
   get()  { return _db; },
   save() { salvarDB(_db); },
 
-  /* --- Vídeos --- */
-  getVideos()    { return _db.videos.filter(v=>v.status==='pub'); },
+  /* --- Áudios (Podcasts) --- */
+  getVideos()    { return _db.videos.filter(v=>v.status==='pub'); }, // alias: getAudios
   getAllVideos()  { return _db.videos; },
   addVideo(v)    { _db.videos.unshift(v); salvarDB(_db); return v; },
   updateVideo(id,data){ const i=_db.videos.findIndex(v=>v.id===id); if(i<0)return null; _db.videos[i]={..._db.videos[i],...data}; salvarDB(_db); return _db.videos[i]; },

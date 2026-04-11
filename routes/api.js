@@ -4,19 +4,19 @@
  *
  * PÚBLICAS:
  *   GET  /api/cotacoes
- *   GET  /api/videos
+ *   GET  /api/audios
  *   POST /api/auth/login
  *   POST /api/auth/registro
  *
  * AUTENTICADAS (Bearer token):
  *   GET  /api/me
  *   PUT  /api/me
- *   POST /api/videos/:id/curtir
- *   GET  /api/videos/:id/curtida
+ *   POST /api/audios/:id/curtir
+ *   GET  /api/audios/:id/curtida
  *
  * ADMIN ONLY:
- *   GET/POST        /api/admin/videos
- *   PUT/DELETE      /api/admin/videos/:id
+ *   GET/POST        /api/admin/audios
+ *   PUT/DELETE      /api/admin/audios/:id
  *   PUT             /api/admin/cotacoes
  *   GET             /api/admin/usuarios
  *   PUT             /api/admin/usuarios/:id/role
@@ -40,7 +40,7 @@ function gerarToken(u) { return jwt.sign({ id:u.id, role:u.role }, SEC(), { expi
 
 router.get('/cotacoes', (_, res) => res.json(db.getCotacoes()));
 
-router.get('/videos',   (_, res) => res.json(db.getVideos()));
+router.get('/audios',   (_, res) => res.json(db.getVideos()));
 
 router.post('/auth/registro', async (req, res) => {
   const { nome, email, senha } = req.body;
@@ -89,31 +89,31 @@ router.put('/me', autenticar, async (req, res) => {
   res.json(sem);
 });
 
-router.post('/videos/:id/curtir', autenticar, (req, res) => {
+router.post('/audios/:id/curtir', autenticar, (req, res) => {
   res.json(db.toggleCurtida(req.user.id, parseInt(req.params.id)));
 });
 
-router.get('/videos/:id/curtida', autenticar, (req, res) => {
+router.get('/audios/:id/curtida', autenticar, (req, res) => {
   res.json({ curtido: db.getCurtida(req.user.id, parseInt(req.params.id)) });
 });
 
 /* ═══ ADMIN ══════════════════════════════════════════════════════════ */
 
-router.get('/admin/videos',    autenticar, soAdmin, (_, res) => res.json(db.getAllVideos()));
+router.get('/admin/audios',    autenticar, soAdmin, (_, res) => res.json(db.getAllVideos()));
 
-router.post('/admin/videos',   autenticar, soAdmin, (req, res) => {
+router.post('/admin/audios',   autenticar, soAdmin, (req, res) => {
   const { titulo, data, dur, url, cat, status, desc } = req.body;
   if (!titulo || !data) return res.status(400).json({ erro:'Título e data obrigatórios.' });
   res.status(201).json(db.addVideo({ id:db.nextId(), titulo, data, dur:dur||'00:00', url:url||'', cat:cat||'Análise Diária', status:status||'pub', desc:desc||'', views:0, likes:0 }));
 });
 
-router.put('/admin/videos/:id', autenticar, soAdmin, (req, res) => {
+router.put('/admin/audios/:id', autenticar, soAdmin, (req, res) => {
   const v = db.updateVideo(parseInt(req.params.id), req.body);
-  if (!v) return res.status(404).json({ erro:'Vídeo não encontrado.' });
+  if (!v) return res.status(404).json({ erro:'Áudio não encontrado.' });
   res.json(v);
 });
 
-router.delete('/admin/videos/:id', autenticar, soAdmin, (req, res) => {
+router.delete('/admin/audios/:id', autenticar, soAdmin, (req, res) => {
   db.deleteVideo(parseInt(req.params.id)); res.json({ ok:true });
 });
 
